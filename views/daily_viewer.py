@@ -238,7 +238,7 @@ def main():
         display_df = display_df.rename(columns=rename_map)
 
         # Display table
-        st.markdown(display_df.to_markdown(index=False), unsafe_allow_html=True)
+        st.markdown(display_df.to_html(index=False, escape=False), unsafe_allow_html=True)
 
     # --- Download
     filename_date_part = date_info.replace(" ", "_").replace("to", "-").lower()
