@@ -9,15 +9,18 @@ from config import DB_PATH
 # 🔗  Convenience: add clickable links for Screener.in
 # ----------------------------------------------------------------------
 def add_screener_links(df: pd.DataFrame) -> pd.DataFrame:
+    def is_valid(code):
+        return code and code.upper() not in {"<N/A>", "N/A", "NONE", "NAN"}
+        
     def make_link(row):
         name = row.get("name", "")
         nse = str(row.get("nse_code", "")).strip()
         bse = str(row.get("bse_code", "")).strip()
 
         # Prefer NSE if available and non-empty
-        if nse:
+        if is_valid(nse):
             return f'<a href="https://www.screener.in/company/{nse}/" target="_blank">{name}</a>'
-        elif bse:
+        elif is_valid(bse):
             return f'<a href="https://www.screener.in/company/{bse}/" target="_blank">{name}</a>'
         else:
             print(f"⚠️ No NSE/BSE code for {name}")
