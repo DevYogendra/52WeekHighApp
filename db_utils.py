@@ -20,6 +20,7 @@ def add_screener_links(df: pd.DataFrame) -> pd.DataFrame:
         elif bse:
             return f'<a href="https://www.screener.in/company/{bse}/" target="_blank">{name}</a>'
         else:
+            print(f"⚠️ No NSE/BSE code for {name}")
             return name  # fallback to plain name if no codes
 
     df = df.copy()
