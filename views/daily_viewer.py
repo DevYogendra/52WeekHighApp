@@ -93,16 +93,17 @@ def main():
         dfs = [get_data_for_date(d_str) for d_str in selected_dates_str]
         if dfs:
             daily_df = pd.concat(dfs, ignore_index=True)
-            if 'name' in daily_df.columns:
-                daily_df.drop_duplicates(subset=['name'], inplace=True)
-            else:
-                st.error("Error: 'name' column not found.")
+            if 'name' not in daily_df.columns:
+                st.error("Missing 'name' column in daily data.")
                 return
 
-            # 🧠 Add historical first market cap and date
+            daily_df.drop_duplicates(subset=['name'], inplace=True)
+
+            # STEP 1: Load historical data
             hist_df = get_historical_market_cap()
             hist_df["date"] = pd.to_datetime(hist_df["date"])
 
+            # STEP 2: Get earliest market cap per company
             first_caps = (
                 hist_df.sort_values(["name", "date"])
                 .groupby("name", as_index=False)
@@ -110,9 +111,18 @@ def main():
                 .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
             )
 
+            # STEP 3: Merge into working data
             daily_df = daily_df.merge(first_caps, on="name", how="left")
 
-            # 📈 Calculate % change in market cap
+            # 🔍 DEBUGGING aid (can remove later)
+            if "first_market_cap" not in daily_df.columns:
+                st.error("Column 'first_market_cap' missing after merge.")
+                st.write("Merged columns:", daily_df.columns.tolist())
+                st.write("Sample merged DataFrame:")
+                st.dataframe(daily_df.head())
+                st.stop()
+
+            # STEP 4: Compute % change
             daily_df["Δ% MCap"] = (
                 100 * (daily_df["market_cap"] - daily_df["first_market_cap"])
                 / daily_df["first_market_cap"].replace(0, pd.NA)
@@ -121,6 +131,7 @@ def main():
         else:
             st.warning("No data found for the selected date range.")
             return
+
 
         # Optional enhancement: fetch first_seen_date and first_market_cap from history
         if "first_market_cap" not in daily_df.columns or daily_df["first_market_cap"].isna().all():
