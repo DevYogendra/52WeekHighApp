@@ -10,7 +10,13 @@ from config import DB_PATH
 # ----------------------------------------------------------------------
 def add_screener_links(df: pd.DataFrame) -> pd.DataFrame:
     def is_valid(code):
-        return code and code.upper() not in {"NA","N/A","<N/A>", "N/A", "NONE", "NAN"}
+        try:
+            if pd.isna(code):
+                return False
+            code = str(code).strip().upper()
+            return code not in {"", "NA", "<NA>", "<N/A>", "N/A", "NONE", "NAN"}
+        except:
+            return False
         
     def make_link(row):
         name = row.get("name", "")
