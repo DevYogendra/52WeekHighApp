@@ -97,7 +97,27 @@ def main():
                 daily_df.drop_duplicates(subset=['name'], inplace=True)
             else:
                 st.error("Error: 'name' column not found.")
-                return 
+                return
+
+            # 🧠 Add historical first market cap and date
+            hist_df = get_historical_market_cap()
+            hist_df["date"] = pd.to_datetime(hist_df["date"])
+
+            first_caps = (
+                hist_df.sort_values(["name", "date"])
+                .groupby("name", as_index=False)
+                .first()[["name", "market_cap", "date"]]
+                .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
+            )
+
+            daily_df = daily_df.merge(first_caps, on="name", how="left")
+
+            # 📈 Calculate % change in market cap
+            daily_df["Δ% MCap"] = (
+                100 * (daily_df["market_cap"] - daily_df["first_market_cap"])
+                / daily_df["first_market_cap"].replace(0, pd.NA)
+            )
+
         else:
             st.warning("No data found for the selected date range.")
             return
