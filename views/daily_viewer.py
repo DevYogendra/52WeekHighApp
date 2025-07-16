@@ -117,49 +117,49 @@ def main():
             daily_df = daily_df.merge(first_caps, on="name", how="left")
 
             
-else:  # All Dates
-    all_dates_str = [d.strftime("%Y-%m-%d") for d in dates]
-    dfs = [get_data_for_date(d_str) for d_str in all_dates_str]
-    if dfs:
-        all_df = pd.concat(dfs, ignore_index=True)
+    else:  # All Dates
+        all_dates_str = [d.strftime("%Y-%m-%d") for d in dates]
+        dfs = [get_data_for_date(d_str) for d_str in all_dates_str]
+        if dfs:
+            all_df = pd.concat(dfs, ignore_index=True)
 
-        if "name" not in all_df.columns or "market_cap" not in all_df.columns:
-            st.error("Required columns missing in data.")
+            if "name" not in all_df.columns or "market_cap" not in all_df.columns:
+                st.error("Required columns missing in data.")
+                return
+
+            if not pd.api.types.is_datetime64_any_dtype(all_df["date"]):
+                all_df["date"] = pd.to_datetime(all_df["date"])
+
+            # Capture first market cap and date seen
+            first_caps = (
+                all_df.sort_values(["name", "date"])
+                .groupby("name", as_index=False)
+                .first()[["name", "market_cap", "date"]]
+                .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
+            )
+
+            # Capture latest data with all needed columns
+            latest_cols = [
+                "name", "date", "market_cap", "industry", "current_price", "sales",
+                "operating_profit", "opm", "opm_last_year", "pe", "pbv", "peg",
+                "roa", "debt_to_equity", "roe", "working_capital", "other_income",
+                "down_from_52w_high", "nse_code", "bse_code"
+            ]
+
+            available_cols = [col for col in latest_cols if col in all_df.columns]
+
+            last_caps = (
+                all_df.sort_values(["name", "date"])
+                .groupby("name", as_index=False)
+                .last()[available_cols]
+            )
+
+            # Merge
+            daily_df = last_caps.merge(first_caps, on="name", how="left")
+
+        else:
+            st.warning("No data found for all dates.")
             return
-
-        if not pd.api.types.is_datetime64_any_dtype(all_df["date"]):
-            all_df["date"] = pd.to_datetime(all_df["date"])
-
-        # Capture first market cap and date seen
-        first_caps = (
-            all_df.sort_values(["name", "date"])
-            .groupby("name", as_index=False)
-            .first()[["name", "market_cap", "date"]]
-            .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
-        )
-
-        # Capture latest data with all needed columns
-        latest_cols = [
-            "name", "date", "market_cap", "industry", "current_price", "sales",
-            "operating_profit", "opm", "opm_last_year", "pe", "pbv", "peg",
-            "roa", "debt_to_equity", "roe", "working_capital", "other_income",
-            "down_from_52w_high", "nse_code", "bse_code"
-        ]
-
-        available_cols = [col for col in latest_cols if col in all_df.columns]
-
-        last_caps = (
-            all_df.sort_values(["name", "date"])
-            .groupby("name", as_index=False)
-            .last()[available_cols]
-        )
-
-        # Merge
-        daily_df = last_caps.merge(first_caps, on="name", how="left")
-
-    else:
-        st.warning("No data found for all dates.")
-        return
 
     if daily_df.empty:
         st.warning("No data available after processing.")
