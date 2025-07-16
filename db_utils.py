@@ -16,15 +16,16 @@ def add_screener_links(df: pd.DataFrame) -> pd.DataFrame:
 
         # Prefer NSE if available and non-empty
         if nse:
-            return f"[{name}](https://www.screener.in/company/{nse}/)"
+            return f'<a href="https://www.screener.in/company/{nse}/" target="_blank">{name}</a>'
         elif bse:
-            return f"[{name}](https://www.screener.in/company/{bse}/)"
+            return f'<a href="https://www.screener.in/company/{bse}/" target="_blank">{name}</a>'
         else:
             return name  # fallback to plain name if no codes
 
     df = df.copy()
     df["name"] = df.apply(make_link, axis=1)
     return df
+
 
 # ----------------------------------------------------------------------
 # 📄  Cached data helpers
