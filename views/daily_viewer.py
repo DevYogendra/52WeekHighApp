@@ -110,9 +110,14 @@ def main():
                 .first()[["name", "market_cap", "date"]]
                 .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
             )
+            
+            # Clean up existing columns before merge to avoid _x, _y confusion
+            daily_df = daily_df.drop(columns=[col for col in daily_df.columns if col in ["first_market_cap", "first_seen_date"]], errors="ignore")
 
             # STEP 3: Merge into working data
             daily_df = daily_df.merge(first_caps, on="name", how="left")
+
+            # Now these columns will be available without _x/_y
 
             # 🔍 DEBUGGING aid (can remove later)
             if "first_market_cap" not in daily_df.columns:
