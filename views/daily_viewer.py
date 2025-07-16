@@ -17,17 +17,11 @@ def main():
         st.warning("No data available.")
         return
 
-    # Convert to datetime objects for reliable sorting.
     dates = sorted([pd.to_datetime(d).date() for d in dates])
-    
     min_date_available = dates[0]
     max_date_available = dates[-1]
 
-    date_mode = st.radio(
-        "Select Date Mode", 
-        ["Single Date", "Date Range", "All Dates"],
-        index=1
-    )
+    date_mode = st.radio("Select Date Mode", ["Single Date", "Date Range", "All Dates"], index=1)
 
     daily_df = pd.DataFrame()
 
@@ -111,13 +105,32 @@ def main():
     else:  # All Dates
         all_dates_str = [d.strftime("%Y-%m-%d") for d in dates]
         dfs = [get_data_for_date(d_str) for d_str in all_dates_str]
-        if dfs: 
-            daily_df = pd.concat(dfs, ignore_index=True)
-            if 'name' in daily_df.columns:
-                daily_df.drop_duplicates(subset=['name'], inplace=True)
-            else:
-                st.error("Error: 'name' column not found.")
-                return 
+        if dfs:
+            all_df = pd.concat(dfs, ignore_index=True)
+
+            if "name" not in all_df.columns or "market_cap" not in all_df.columns:
+                st.error("Required columns missing in data.")
+                return
+
+            if not pd.api.types.is_datetime64_any_dtype(all_df["date"]):
+                all_df["date"] = pd.to_datetime(all_df["date"])
+
+            first_caps = (
+                all_df.sort_values(["name", "date"])
+                .groupby("name", as_index=False)
+                .first()[["name", "market_cap", "date"]]
+                .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
+            )
+
+            last_caps = (
+                all_df.sort_values(["name", "date"])
+                .groupby("name", as_index=False)
+                .last()[["name", "market_cap", "date"]]
+                .rename(columns={"market_cap": "market_cap", "date": "date"})
+            )
+
+            daily_df = last_caps.merge(first_caps, on="name", how="left")
+
         else:
             st.warning("No data found for all dates.")
             return
@@ -126,34 +139,22 @@ def main():
         st.warning("No data available after processing.")
         return
 
-
-    # ------------------------------------------------------------------
-    # 🏷️  Ensure 'first_market_cap' & Δ% MCap are present
-    # ------------------------------------------------------------------
     if "first_market_cap" not in daily_df.columns or daily_df["first_market_cap"].isna().all():
-        # Load the full history once
         hist_df = get_historical_market_cap()
-
-        # The earliest market‑cap for every company
         first_caps = (
             hist_df.sort_values("date")
             .groupby("name", as_index=False)
             .first()[["name", "market_cap"]]
             .rename(columns={"market_cap": "first_market_cap"})
         )
-
-        # Merge into the working DataFrame
         daily_df = daily_df.merge(first_caps, on="name", how="left")
 
-    # Calculate Δ% MCap (safe division)
     daily_df["Δ% MCap"] = (
         100
         * (daily_df["market_cap"] - daily_df["first_market_cap"])
         / daily_df["first_market_cap"]
     )
 
-
-    # --- Industry Filter
     industries = sorted(daily_df["industry"].dropna().unique().tolist())
     industries.insert(0, "All")
     selected_industry = st.selectbox("Filter by Industry", industries)
@@ -162,7 +163,6 @@ def main():
     if selected_industry != "All":
         filtered_df = filtered_df[filtered_df["industry"] == selected_industry]
 
-    # --- Show count and date info
     if date_mode == "Single Date":
         date_info = selected_date.strftime("%Y-%m-%d")
     elif date_mode == "Date Range":
@@ -179,7 +179,6 @@ def main():
         st.info("No records match the filters.")
         return
 
-    # --- Grouped Display by Industry
     st.markdown("---")
     st.markdown("### 🏭 Grouped View by Industry")
 
@@ -195,7 +194,6 @@ def main():
         .groupby("industry")
     )
 
-    # Define all expected display columns
     standard_cols = [
         'date', 'first_seen_date', 'name',
         'current_price', 'market_cap', 'first_market_cap', 'Δ% MCap',
@@ -204,7 +202,6 @@ def main():
         'other_income', 'down_from_52w_high','nse_code', 'bse_code'
     ]
 
-    # Human-readable column names
     rename_map = {
         'date': 'Date', 'first_seen_date': 'First Seen', 'name': 'Name',
         'current_price': 'Price',
@@ -212,35 +209,28 @@ def main():
         'sales': 'Sales', 'operating_profit': 'Op Profit', 'opm': 'OPM%',
         'opm_last_year': 'OPM LY%', 'pe': 'P/E', 'pbv': 'P/BV', 'peg': 'PEG',
         'roa': 'ROA', 'debt_to_equity': 'D/E', 'roe': 'ROE', 'working_capital': 'WC',
-        'other_income': 'Oth Income', 'down_from_52w_high': '↓52W High%','nse_code': 'NSE' ,'bse_code': 'BSE'
+        'other_income': 'Oth Income', 'down_from_52w_high': '↓52W High%',
+        'nse_code': 'NSE', 'bse_code': 'BSE'
     }
 
     for industry, group_df in grouped:
         st.markdown(f"#### 🏷️ {industry} ({len(group_df)} companies)")
 
-        # Ensure all standard columns exist
         for col in standard_cols:
             if col not in group_df.columns:
-                group_df[col] = None  # or np.nan if using numpy
+                group_df[col] = None
 
-        # Select only standard columns in fixed order
         display_df = group_df[standard_cols + ['industry']].copy()
-
-        # Add links BEFORE renaming
         display_df = add_screener_links(display_df)
 
-        # Round numeric values
         numeric_cols = display_df.select_dtypes(include='number').columns
         display_df[numeric_cols] = display_df[numeric_cols].round(2)
 
-        # Rename columns for display (drop industry from shown table)
         display_df = display_df.drop(columns=["industry"])
         display_df = display_df.rename(columns=rename_map)
 
-        # Display table
         st.markdown(display_df.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-    # --- Download
     filename_date_part = date_info.replace(" ", "_").replace("to", "-").lower()
     st.download_button(
         "📥 Download CSV",
