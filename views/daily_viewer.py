@@ -201,7 +201,7 @@ def main():
         'current_price', 'market_cap', 'first_market_cap', 'Δ% MCap',
         'sales', 'operating_profit', 'opm', 'opm_last_year', 'pe',
         'pbv', 'peg', 'roa', 'debt_to_equity', 'roe', 'working_capital',
-        'other_income', 'down_from_52w_high'
+        'other_income', 'down_from_52w_high','nse_code', 'bse_code'
     ]
 
     # Human-readable column names
@@ -212,7 +212,7 @@ def main():
         'sales': 'Sales', 'operating_profit': 'Op Profit', 'opm': 'OPM%',
         'opm_last_year': 'OPM LY%', 'pe': 'P/E', 'pbv': 'P/BV', 'peg': 'PEG',
         'roa': 'ROA', 'debt_to_equity': 'D/E', 'roe': 'ROE', 'working_capital': 'WC',
-        'other_income': 'Oth Income', 'down_from_52w_high': '↓52W High%'
+        'other_income': 'Oth Income', 'down_from_52w_high': '↓52W High%','nse_code': 'NSE' ,'bse_code': 'BSE'
     }
 
     for industry, group_df in grouped:
