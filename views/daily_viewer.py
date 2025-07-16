@@ -101,6 +101,21 @@ def main():
         else:
             st.warning("No data found for the selected date range.")
             return
+
+        # Optional enhancement: fetch first_seen_date and first_market_cap from history
+        if "first_market_cap" not in daily_df.columns or daily_df["first_market_cap"].isna().all():
+            hist_df = get_historical_market_cap()
+            hist_df["date"] = pd.to_datetime(hist_df["date"])
+
+            first_caps = (
+                hist_df.sort_values(["name", "date"])
+                .groupby("name", as_index=False)
+                .first()[["name", "market_cap", "date"]]
+                .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
+            )
+
+            daily_df = daily_df.merge(first_caps, on="name", how="left")
+
             
 else:  # All Dates
     all_dates_str = [d.strftime("%Y-%m-%d") for d in dates]
