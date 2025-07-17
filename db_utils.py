@@ -9,22 +9,33 @@ from config import DB_PATH
 # 🔗  Convenience: add clickable links for Screener.in
 # ----------------------------------------------------------------------
 def add_screener_links(df: pd.DataFrame) -> pd.DataFrame:
+    def is_valid(code):
+        try:
+            if pd.isna(code):
+                return False
+            code = str(code).strip().upper()
+            return code not in {"", "NA", "<NA>", "<N/A>", "N/A", "NONE", "NAN"}
+        except:
+            return False
+        
     def make_link(row):
         name = row.get("name", "")
         nse = str(row.get("nse_code", "")).strip()
         bse = str(row.get("bse_code", "")).strip()
 
         # Prefer NSE if available and non-empty
-        if nse:
-            return f"[{name}](https://www.screener.in/company/{nse}/)"
-        elif bse:
-            return f"[{name}](https://www.screener.in/company/{bse}/)"
+        if is_valid(nse):
+            return f'<a href="https://www.screener.in/company/{nse}/" target="_blank">{name}</a>'
+        elif is_valid(bse):
+            return f'<a href="https://www.screener.in/company/{bse}/" target="_blank">{name}</a>'
         else:
+            print(f"⚠️ No NSE/BSE code for {name}")
             return name  # fallback to plain name if no codes
 
     df = df.copy()
     df["name"] = df.apply(make_link, axis=1)
     return df
+
 
 # ----------------------------------------------------------------------
 # 📄  Cached data helpers
