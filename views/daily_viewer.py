@@ -9,7 +9,7 @@ from db_utils import (
     get_historical_market_cap,   # 👈 NEW
 )
 
-from .exclusion_filter import render_exclusion_ui
+# from .exclusion_filter import render_exclusion_ui
 
 def main():
     st.title("📅 Daily 52-Week Highs Viewer")
@@ -219,7 +219,7 @@ def main():
         / daily_df["first_market_cap"]
     )
     # 🔁 Apply persistent exclusion filter
-    daily_df = render_exclusion_ui(daily_df)
+    # daily_df = render_exclusion_ui(daily_df)
 
     industries = sorted(daily_df["industry"].dropna().unique().tolist())
     industries.insert(0, "All")
