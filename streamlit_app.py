@@ -10,6 +10,8 @@ page_options = {
     "📅 Daily Highs Viewer": "daily_viewer",
     "📈 Momentum Summary": "momentum_summary",
     "🔥 Emerging Winners": "emerging_winners",
+    "📈 Trend Analyzer": "trend_analyzer",
+    "🌪️ Industry Tailwinds": "industry_tailwinds"    
 #    "🏆 Top Performers": "top_performers_grouped",
 #    "🔥 Sector Heatmap": "sector_heatmap",
 }
