@@ -9,6 +9,8 @@ from db_utils import (
     get_historical_market_cap,   # 👈 NEW
 )
 
+# from .exclusion_filter import render_exclusion_ui
+
 def main():
     st.title("📅 Daily 52-Week Highs Viewer")
 
@@ -25,7 +27,6 @@ def main():
 
     daily_df = pd.DataFrame()
 
-    # Single Date View
     if date_mode == "Single Date":
         selected_date = st.selectbox(
             "Select a date", 
@@ -34,14 +35,13 @@ def main():
             format_func=lambda date: date.strftime("%Y-%m-%d")
         )
         daily_df = get_data_for_date(selected_date.strftime("%Y-%m-%d"))
-
-    # Date Range View
+        
     elif date_mode == "Date Range":
         st.subheader("Date Range Selection")
 
-        # Preset or Custom Date Range
         end_date_default = max_date_available
         start_date_default = min_date_available
+        
         col1, col2 = st.columns([1, 2])
         with col1:
             range_method = st.radio("Define range by:", ("Presets", "Last 'y' days", "Last 'x' months"))
@@ -73,7 +73,6 @@ def main():
                 num_months = st.number_input("Enter months (x):", min_value=1, value=3)
                 start_date_default = max_date_available - relativedelta(months=num_months)
 
-        # Adjust for earliest available data
         if start_date_default < min_date_available:
             start_date_default = min_date_available
             st.caption(f"Note: Range start adjusted to earliest available date: {min_date_available.strftime('%Y-%m-%d')}")
@@ -102,7 +101,47 @@ def main():
 
             daily_df.drop_duplicates(subset=['name'], inplace=True)
 
-            # Historical data
+            # STEP 1: Load historical data
+            hist_df = get_historical_market_cap()
+            hist_df["date"] = pd.to_datetime(hist_df["date"])
+
+            # STEP 2: Get earliest market cap per company
+            first_caps = (
+                hist_df.sort_values(["name", "date"])
+                .groupby("name", as_index=False)
+                .first()[["name", "market_cap", "date"]]
+                .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
+            )
+            
+            # Clean up existing columns before merge to avoid _x, _y confusion
+            daily_df = daily_df.drop(columns=[col for col in daily_df.columns if col in ["first_market_cap", "first_seen_date"]], errors="ignore")
+
+            # STEP 3: Merge into working data
+            daily_df = daily_df.merge(first_caps, on="name", how="left")
+
+            # Now these columns will be available without _x/_y
+
+            # 🔍 DEBUGGING aid (can remove later)
+            if "first_market_cap" not in daily_df.columns:
+                st.error("Column 'first_market_cap' missing after merge.")
+                st.write("Merged columns:", daily_df.columns.tolist())
+                st.write("Sample merged DataFrame:")
+                st.dataframe(daily_df.head())
+                st.stop()
+
+            # STEP 4: Compute % change
+            daily_df["Δ% MCap"] = (
+                100 * (daily_df["market_cap"] - daily_df["first_market_cap"])
+                / daily_df["first_market_cap"].replace(0, pd.NA)
+            )
+
+        else:
+            st.warning("No data found for the selected date range.")
+            return
+
+
+        # Optional enhancement: fetch first_seen_date and first_market_cap from history
+        if "first_market_cap" not in daily_df.columns or daily_df["first_market_cap"].isna().all():
             hist_df = get_historical_market_cap()
             hist_df["date"] = pd.to_datetime(hist_df["date"])
 
@@ -113,15 +152,10 @@ def main():
                 .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
             )
 
-            # Merge with the current data
             daily_df = daily_df.merge(first_caps, on="name", how="left")
-            daily_df["Δ% MCap"] = 100 * (daily_df["market_cap"] - daily_df["first_market_cap"]) / daily_df["first_market_cap"].replace(0, pd.NA)
 
-        else:
-            st.warning("No data found for the selected date range.")
-            return
-
-    else:  # All Dates View
+            
+    else:  # All Dates
         all_dates_str = [d.strftime("%Y-%m-%d") for d in dates]
         dfs = [get_data_for_date(d_str) for d_str in all_dates_str]
         if dfs:
@@ -131,8 +165,10 @@ def main():
                 st.error("Required columns missing in data.")
                 return
 
-            all_df["date"] = pd.to_datetime(all_df["date"])
+            if not pd.api.types.is_datetime64_any_dtype(all_df["date"]):
+                all_df["date"] = pd.to_datetime(all_df["date"])
 
+            # Capture first market cap and date seen
             first_caps = (
                 all_df.sort_values(["name", "date"])
                 .groupby("name", as_index=False)
@@ -140,12 +176,14 @@ def main():
                 .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
             )
 
+            # Capture latest data with all needed columns
             latest_cols = [
                 "name", "date", "market_cap", "industry", "current_price", "sales",
                 "operating_profit", "opm", "opm_last_year", "pe", "pbv", "peg",
                 "roa", "debt_to_equity", "roe", "working_capital", "other_income",
                 "down_from_52w_high", "nse_code", "bse_code"
             ]
+
             available_cols = [col for col in latest_cols if col in all_df.columns]
 
             last_caps = (
@@ -154,7 +192,7 @@ def main():
                 .last()[available_cols]
             )
 
-            # Merge data
+            # Merge
             daily_df = last_caps.merge(first_caps, on="name", how="left")
 
         else:
@@ -175,9 +213,14 @@ def main():
         )
         daily_df = daily_df.merge(first_caps, on="name", how="left")
 
-    daily_df["Δ% MCap"] = 100 * (daily_df["market_cap"] - daily_df["first_market_cap"]) / daily_df["first_market_cap"]
+    daily_df["Δ% MCap"] = (
+        100
+        * (daily_df["market_cap"] - daily_df["first_market_cap"])
+        / daily_df["first_market_cap"]
+    )
+    # 🔁 Apply persistent exclusion filter
+    # daily_df = render_exclusion_ui(daily_df)
 
-    # Filter by industry
     industries = sorted(daily_df["industry"].dropna().unique().tolist())
     industries.insert(0, "All")
     selected_industry = st.selectbox("Filter by Industry", industries)
@@ -186,7 +229,6 @@ def main():
     if selected_industry != "All":
         filtered_df = filtered_df[filtered_df["industry"] == selected_industry]
 
-    # Display Date Info
     if date_mode == "Single Date":
         date_info = selected_date.strftime("%Y-%m-%d")
     elif date_mode == "Date Range":
@@ -194,7 +236,10 @@ def main():
     else:
         date_info = "All Dates"
 
-    st.markdown(f"Showing **{len(filtered_df)}** records for **{date_info}**" + (f" in **{selected_industry}**" if selected_industry != "All" else ""))
+    st.markdown(
+        f"Showing **{len(filtered_df)}** records for **{date_info}**"
+        + (f" in **{selected_industry}**" if selected_industry != "All" else "")
+    )
 
     if filtered_df.empty:
         st.info("No records match the filters.")
@@ -203,28 +248,40 @@ def main():
     st.markdown("---")
     st.markdown("### 🏭 Grouped View by Industry")
 
+    if "industry" not in filtered_df.columns:
+        st.error("Error: 'industry' column not found.")
+        return
+
     filtered_df["industry"] = filtered_df["industry"].fillna("None")
 
-    grouped = filtered_df.sort_values(["industry", "market_cap"], ascending=[True, False]).groupby("industry")
+    grouped = (
+        filtered_df
+        .sort_values(["industry", "market_cap"], ascending=[True, False])
+        .groupby("industry")
+    )
 
     standard_cols = [
-        'date', 'first_seen_date', 'name', 'current_price', 'market_cap', 'first_market_cap', 'Δ% MCap',
-        'sales', 'operating_profit', 'opm', 'opm_last_year', 'pe', 'pbv', 'peg', 'roa', 'debt_to_equity', 'roe',
-        'working_capital', 'other_income', 'down_from_52w_high', 'nse_code', 'bse_code'
+        'date', 'first_seen_date', 'name',
+        'current_price', 'market_cap', 'first_market_cap', 'Δ% MCap',
+        'sales', 'operating_profit', 'opm', 'opm_last_year', 'pe',
+        'pbv', 'peg', 'roa', 'debt_to_equity', 'roe', 'working_capital',
+        'other_income', 'down_from_52w_high','nse_code', 'bse_code'
     ]
 
     rename_map = {
-        'date': 'Date', 'first_seen_date': 'First Seen', 'name': 'Name', 'current_price': 'Price',
-        'market_cap': 'MCap', 'first_market_cap': 'First MCap', 'Δ% MCap': 'Δ% MCap', 'sales': 'Sales',
-        'operating_profit': 'Op Profit', 'opm': 'OPM%', 'opm_last_year': 'OPM LY%', 'pe': 'P/E', 'pbv': 'P/BV',
-        'peg': 'PEG', 'roa': 'ROA', 'debt_to_equity': 'D/E', 'roe': 'ROE', 'working_capital': 'WC',
-        'other_income': 'Oth Income', 'down_from_52w_high': '↓52W High%', 'nse_code': 'NSE', 'bse_code': 'BSE'
+        'date': 'Date', 'first_seen_date': 'First Seen', 'name': 'Name',
+        'current_price': 'Price',
+        'market_cap': 'MCap', 'first_market_cap': 'First MCap', 'Δ% MCap': 'Δ% MCap',
+        'sales': 'Sales', 'operating_profit': 'Op Profit', 'opm': 'OPM%',
+        'opm_last_year': 'OPM LY%', 'pe': 'P/E', 'pbv': 'P/BV', 'peg': 'PEG',
+        'roa': 'ROA', 'debt_to_equity': 'D/E', 'roe': 'ROE', 'working_capital': 'WC',
+        'other_income': 'Oth Income', 'down_from_52w_high': '↓52W High%',
+        'nse_code': 'NSE', 'bse_code': 'BSE'
     }
 
     for industry, group_df in grouped:
         st.markdown(f"#### 🏷️ {industry} ({len(group_df)} companies)")
 
-        # Add missing columns for display
         for col in standard_cols:
             if col not in group_df.columns:
                 group_df[col] = None
@@ -235,7 +292,9 @@ def main():
         numeric_cols = display_df.select_dtypes(include='number').columns
         display_df[numeric_cols] = display_df[numeric_cols].round(2)
 
-        display_df = display_df.drop(columns=["industry"]).rename(columns=rename_map)
+        display_df = display_df.drop(columns=["industry"])
+        display_df = display_df.rename(columns=rename_map)
+
         st.markdown(display_df.to_html(index=False, escape=False), unsafe_allow_html=True)
 
     filename_date_part = date_info.replace(" ", "_").replace("to", "-").lower()
