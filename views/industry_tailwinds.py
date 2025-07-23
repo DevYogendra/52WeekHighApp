@@ -17,7 +17,7 @@ def main():
     industry_counts = df_active.groupby("industry").agg(
         Momentum_Stocks=("name", "count"),
         Avg_Hits_7=("hits_7", "mean"),
-        Avg_Gain_MCap=("%%_gain_mc", "mean")
+        Avg_Gain_MCap=("%_gain_mc", "mean")
     ).reset_index()
 
     industry_counts = industry_counts[industry_counts["Momentum_Stocks"] >= min_stocks]
