@@ -13,6 +13,10 @@ def get_week_range(date):
 
 
 def compute_weekly_summary(df, start_date, end_date):
+    # Ensure date range is in pandas datetime format
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
     mask = (df["date"] >= start_date) & (df["date"] <= end_date)
     week_df = df[mask].copy()
 
@@ -31,8 +35,9 @@ def main():
     st.markdown("Compare weekly changes in momentum for stocks and industries.")
 
     df = get_historical_market_cap()
-    today = datetime.date.today()
+    df["date"] = pd.to_datetime(df["date"])  # Ensure date column is datetime
 
+    today = datetime.date.today()
     this_mon, this_sun = get_week_range(today)
     last_mon, last_sun = this_mon - datetime.timedelta(days=7), this_sun - datetime.timedelta(days=7)
 
