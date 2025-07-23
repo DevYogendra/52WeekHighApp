@@ -66,15 +66,17 @@ def main():
     # Convert to Cr for slider
     merged["market_cap_cr"] = merged["market_cap_end_this"] / 1e7  # 1e7 = 10 million = ₹1 Cr
 
-    min_cr = float(merged["market_cap_cr"].min())
-    max_cr = float(merged["market_cap_cr"].max())
-
-    # Prevent slider crash due to NaN or invalid range
-    if pd.isna(min_cr) or pd.isna(max_cr) or min_cr >= max_cr:
-        st.error("Market Cap data is insufficient or invalid for filtering.")
+    market_cap_cr = merged["market_cap_cr"].dropna()
+    if market_cap_cr.empty:
+        st.warning("No market cap data available for filtering.")
         return
 
-    cr_filter = st.sidebar.slider("Market Cap Filter (₹ Cr)", min_value=int(min_cr), max_value=int(max_cr), value=(int(min_cr), int(max_cr)))
+    min_cr = int(market_cap_cr.min())
+    max_cr = int(market_cap_cr.max())
+    if min_cr == max_cr:
+        max_cr += 1
+
+    cr_filter = st.sidebar.slider("Market Cap Filter (₹ Cr)", min_value=min_cr, max_value=max_cr, value=(min_cr, max_cr))
 
     # Apply filter using Cr
     filtered = merged[merged["market_cap_cr"].between(cr_filter[0], cr_filter[1])].copy()
