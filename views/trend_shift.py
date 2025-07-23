@@ -27,9 +27,10 @@ def compute_weekly_summary(df, start_date, end_date):
         industry=("industry", "first"),
         nse_code=("nse_code", "first"),
         bse_code=("bse_code", "first")
-    )
+    ).reset_index()
+
     summary["gain_pct"] = 100 * (summary["market_cap_end"] - summary["market_cap_start"]) / summary["market_cap_start"]
-    return summary.reset_index()
+    return summary
 
 
 def main():
@@ -62,14 +63,21 @@ def main():
 
     merged = merged.sort_values(by="hits_delta", ascending=False)
 
-    # Add Market Cap filter
-    min_cap, max_cap = float(merged["market_cap_end_this"].min()), float(merged["market_cap_end_this"].max())
-    cap_filter = st.sidebar.slider("Market Cap Filter (This Week)", int(min_cap), int(max_cap), (int(min_cap), int(max_cap)))
+    # Convert to Cr for slider
+    merged["market_cap_cr"] = merged["market_cap_end_this"] / 1e7  # 1e7 = 10 million = ₹1 Cr
 
-    filtered = merged[merged["market_cap_end_this"].between(cap_filter[0], cap_filter[1])].copy()
+    min_cr = int(merged["market_cap_cr"].min())
+    max_cr = int(merged["market_cap_cr"].max())
 
-    # Add links
-    filtered = add_screener_links(filtered)
+    cr_filter = st.sidebar.slider("Market Cap Filter (₹ Cr)", min_cr, max_cr, (min_cr, max_cr))
+
+    # Apply filter using Cr
+    filtered = merged[merged["market_cap_cr"].between(cr_filter[0], cr_filter[1])].copy()
+
+    # Add links using available NSE/BSE codes from "_this" columns
+    filtered["nse_code"] = filtered["nse_code_this"]
+    filtered["bse_code"] = filtered["bse_code_this"]
+    filtered = add_screener_links(filtered.rename(columns={"name": "name"}))
 
     rising = filtered[(filtered["hits_delta"] > 0) & (filtered["gain_delta"] > 0)].copy()
     losing = filtered[(filtered["hits_delta"] < 0) & (filtered["gain_delta"] < 0)].copy()
