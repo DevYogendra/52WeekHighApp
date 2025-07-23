@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import datetime
-from db_utils import get_historical_market_cap
+from db_utils import get_historical_market_cap, add_screener_links
 
 
 def get_week_range(date):
@@ -24,7 +24,9 @@ def compute_weekly_summary(df, start_date, end_date):
         hits=("date", "count"),
         market_cap_start=("market_cap", "first"),
         market_cap_end=("market_cap", "last"),
-        industry=("industry", "first")
+        industry=("industry", "first"),
+        nse_code=("nse_code", "first"),
+        bse_code=("bse_code", "first")
     )
     summary["gain_pct"] = 100 * (summary["market_cap_end"] - summary["market_cap_start"]) / summary["market_cap_start"]
     return summary.reset_index()
@@ -52,7 +54,7 @@ def main():
         last_week,
         on="name",
         how="outer",
-        suffixes=("_this", "_last")
+        suffixes=('_this', '_last')
     )
 
     merged["hits_delta"] = merged["hits_this"].fillna(0) - merged["hits_last"].fillna(0)
@@ -60,18 +62,44 @@ def main():
 
     merged = merged.sort_values(by="hits_delta", ascending=False)
 
-    st.markdown("### 📈 Stocks with Rising Momentum")
-    st.dataframe(
-        merged[(merged["hits_delta"] > 0) & (merged["gain_delta"] > 0)][
-            ["name", "industry_this", "hits_last", "hits_this", "gain_pct_last", "gain_pct_this", "hits_delta", "gain_delta"]
-        ].rename(columns={"industry_this": "industry"}),
-        use_container_width=True
-    )
+    # Add Market Cap filter
+    min_cap, max_cap = float(merged["market_cap_end_this"].min()), float(merged["market_cap_end_this"].max())
+    cap_filter = st.sidebar.slider("Market Cap Filter (This Week)", int(min_cap), int(max_cap), (int(min_cap), int(max_cap)))
 
-    st.markdown("### 📉 Stocks Losing Momentum")
-    st.dataframe(
-        merged[(merged["hits_delta"] < 0) & (merged["gain_delta"] < 0)][
-            ["name", "industry_this", "hits_last", "hits_this", "gain_pct_last", "gain_pct_this", "hits_delta", "gain_delta"]
-        ].rename(columns={"industry_this": "industry"}),
-        use_container_width=True
-    )
+    filtered = merged[merged["market_cap_end_this"].between(cap_filter[0], cap_filter[1])].copy()
+
+    # Add links
+    filtered = add_screener_links(filtered)
+
+    rising = filtered[(filtered["hits_delta"] > 0) & (filtered["gain_delta"] > 0)].copy()
+    losing = filtered[(filtered["hits_delta"] < 0) & (filtered["gain_delta"] < 0)].copy()
+
+    def render_markdown_table(df, title):
+        if df.empty:
+            st.markdown(f"**{title}**\n\n_No matching stocks._")
+            return
+        display_cols = [
+            "name", "industry_this", "market_cap_end_this",
+            "hits_last", "hits_this", "gain_pct_last", "gain_pct_this",
+            "hits_delta", "gain_delta"
+        ]
+        df = df[display_cols].rename(columns={
+            "name": "Company",
+            "industry_this": "Industry",
+            "market_cap_end_this": "MCap",
+            "hits_last": "Hits LW",
+            "hits_this": "Hits TW",
+            "gain_pct_last": "%Gain LW",
+            "gain_pct_this": "%Gain TW",
+            "hits_delta": "Δ Hits",
+            "gain_delta": "Δ Gain"
+        })
+        df["MCap"] = df["MCap"].apply(lambda x: f"₹{x:,.0f}")
+        df["%Gain LW"] = df["%Gain LW"].round(1)
+        df["%Gain TW"] = df["%Gain TW"].round(1)
+        df["Δ Gain"] = df["Δ Gain"].round(1)
+        st.markdown(f"### {title}")
+        st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+
+    render_markdown_table(rising, "📈 Stocks with Rising Momentum")
+    render_markdown_table(losing, "📉 Stocks Losing Momentum")
