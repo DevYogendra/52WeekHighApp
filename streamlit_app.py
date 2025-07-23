@@ -11,8 +11,8 @@ page_options = {
     "📊 Trend Shift Analyzer": "trend_shift",
     "🔥 Emerging Winners": "emerging_winners",
     "📈 Trend Analyzer": "trend_analyzer",
-    "🌪️ Industry Tailwinds": "industry_tailwinds"    
-    "📈 Momentum Summary": "momentum_summary",    
+    "🌪️ Industry Tailwinds": "industry_tailwinds",
+    "📈 Momentum Summary": "momentum_summary",
 #    "🏆 Top Performers": "top_performers_grouped",
 #    "🔥 Sector Heatmap": "sector_heatmap",
 }
