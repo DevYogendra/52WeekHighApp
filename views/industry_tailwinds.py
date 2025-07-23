@@ -8,7 +8,7 @@ def main():
     st.markdown("Industries with multiple momentum stocks hitting 52-week highs recently.")
 
     st.sidebar.subheader("Filters")
-    lookback = st.sidebar.slider("Minimum Hits in Last 7 Days", 1, 7, 2)
+    lookback = st.sidebar.slider("Minimum Hits in Last 7 Days", 1, 6, 2)
     min_stocks = st.sidebar.slider("Minimum Stocks per Industry", 1, 10, 3)
     
     df = get_momentum_summary()
