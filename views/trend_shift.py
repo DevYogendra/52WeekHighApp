@@ -35,6 +35,19 @@ def compute_weekly_summary(df, start_date, end_date):
 
 def main():
     st.title("📊 Trend Shift Analyzer")
+    st.markdown("""
+    This page helps you **analyze week-over-week momentum shifts** across stocks in terms of:
+
+    - 📈 Frequency of 52-week high appearances (`Hits`)
+    - 📊 Change in market cap (`% Gain`)
+
+    Use this tool to:
+    - Identify **rising momentum stocks** early
+    - Spot stocks **losing momentum** (risk of trend reversal)
+    - Focus on companies within a specific **Market Cap range** (e.g., midcaps)
+
+    **Tip:** Sort by Δ Hits or Δ Gain to surface accelerating trends.
+    """)
     st.markdown("Compare weekly changes in momentum for stocks and industries.")
 
     df = get_historical_market_cap()
@@ -114,7 +127,14 @@ def main():
         df["%Gain LW"] = df["%Gain LW"].round(1)
         df["%Gain TW"] = df["%Gain TW"].round(1)
         df["Δ Gain"] = df["Δ Gain"].round(1)
-        st.markdown(f"### {title}")
+                st.markdown(f"### {title}")
+        st.markdown("""
+        - **Company**: Clickable name linking to Screener.in
+        - **Hits LW/TW**: Number of times the stock hit 52-week high last week vs this week
+        - **Δ Hits**: Change in hits (positive = rising interest)
+        - **%Gain LW/TW**: Market cap change (%) over the week
+        - **Δ Gain**: Weekly delta in market cap growth
+        """)
         st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
 
     render_markdown_table(rising, "📈 Stocks with Rising Momentum")
