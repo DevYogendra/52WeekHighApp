@@ -127,7 +127,7 @@ def main():
         df["%Gain LW"] = df["%Gain LW"].round(1)
         df["%Gain TW"] = df["%Gain TW"].round(1)
         df["Δ Gain"] = df["Δ Gain"].round(1)
-                st.markdown(f"### {title}")
+                        st.markdown(f"### {title}")
         st.markdown("""
         - **Company**: Clickable name linking to Screener.in
         - **Hits LW/TW**: Number of times the stock hit 52-week high last week vs this week
