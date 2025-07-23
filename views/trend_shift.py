@@ -66,10 +66,15 @@ def main():
     # Convert to Cr for slider
     merged["market_cap_cr"] = merged["market_cap_end_this"] / 1e7  # 1e7 = 10 million = ₹1 Cr
 
-    min_cr = int(merged["market_cap_cr"].min())
-    max_cr = int(merged["market_cap_cr"].max())
+    min_cr = float(merged["market_cap_cr"].min())
+    max_cr = float(merged["market_cap_cr"].max())
 
-    cr_filter = st.sidebar.slider("Market Cap Filter (₹ Cr)", min_cr, max_cr, (min_cr, max_cr))
+    # Prevent slider crash due to NaN or invalid range
+    if pd.isna(min_cr) or pd.isna(max_cr) or min_cr >= max_cr:
+        st.error("Market Cap data is insufficient or invalid for filtering.")
+        return
+
+    cr_filter = st.sidebar.slider("Market Cap Filter (₹ Cr)", min_value=int(min_cr), max_value=int(max_cr), value=(int(min_cr), int(max_cr)))
 
     # Apply filter using Cr
     filtered = merged[merged["market_cap_cr"].between(cr_filter[0], cr_filter[1])].copy()
@@ -77,7 +82,8 @@ def main():
     # Add links using available NSE/BSE codes from "_this" columns
     filtered["nse_code"] = filtered["nse_code_this"]
     filtered["bse_code"] = filtered["bse_code_this"]
-    filtered = add_screener_links(filtered.rename(columns={"name": "name"}))
+    filtered["name"] = filtered["name"]  # Ensure column is present
+    filtered = add_screener_links(filtered)
 
     rising = filtered[(filtered["hits_delta"] > 0) & (filtered["gain_delta"] > 0)].copy()
     losing = filtered[(filtered["hits_delta"] < 0) & (filtered["gain_delta"] < 0)].copy()
