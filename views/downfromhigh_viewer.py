@@ -215,7 +215,6 @@ def main():
             st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
 
     else:
-        st.markdown("---")
         st.markdown("### 📃 Flat Company List")
 
 
