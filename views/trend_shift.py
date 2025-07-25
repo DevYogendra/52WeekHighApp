@@ -51,8 +51,8 @@ def main():
     st.markdown("Compare weekly changes in momentum for stocks and industries.")
 
     df = get_historical_market_cap()
-    st.write(df.columns.tolist())
-    st.write(df.head())    
+    # st.write(df.columns.tolist())
+    # st.write(df.head())    
     df["date"] = pd.to_datetime(df["date"])  # Ensure date column is datetime
 
     today = datetime.date.today()
