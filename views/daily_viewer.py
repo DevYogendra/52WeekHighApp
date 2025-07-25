@@ -11,6 +11,18 @@ from db_utils import (
 
 # from .exclusion_filter import render_exclusion_ui
 
+def compute_mcap_change(df):
+    df = df.copy()
+    for col in ["market_cap", "first_market_cap"]:
+        if col not in df.columns:
+            df[col] = pd.NA
+    df["Δ% MCap"] = (
+        100 * (df["market_cap"] - df["first_market_cap"])
+        / df["first_market_cap"].replace(0, pd.NA)
+    )
+    return df
+
+
 def main():
     st.title("📅 Daily 52-Week Highs Viewer")
 
@@ -130,10 +142,7 @@ def main():
                 st.stop()
 
             # STEP 4: Compute % change
-            daily_df["Δ% MCap"] = (
-                100 * (daily_df["market_cap"] - daily_df["first_market_cap"])
-                / daily_df["first_market_cap"].replace(0, pd.NA)
-            )
+            daily_df = compute_mcap_change(daily_df)
 
         else:
             st.warning("No data found for the selected date range.")
@@ -213,11 +222,8 @@ def main():
         )
         daily_df = daily_df.merge(first_caps, on="name", how="left")
 
-    daily_df["Δ% MCap"] = (
-        100
-        * (daily_df["market_cap"] - daily_df["first_market_cap"])
-        / daily_df["first_market_cap"]
-    )
+    daily_df = compute_mcap_change(daily_df)
+
     # 🔁 Apply persistent exclusion filter
     # daily_df = render_exclusion_ui(daily_df)
 
@@ -259,24 +265,83 @@ def main():
         .sort_values(["industry", "market_cap"], ascending=[True, False])
         .groupby("industry")
     )
-
+    
     standard_cols = [
+        # ⏱️ Temporal & Identity
         'date', 'first_seen_date', 'name',
+
+        # 💰 Price & Market Cap
         'current_price', 'market_cap', 'first_market_cap', 'Δ% MCap',
-        'sales', 'operating_profit', 'opm', 'opm_last_year', 'pe',
-        'pbv', 'peg', 'roa', 'debt_to_equity', 'roe', 'working_capital',
-        'other_income', 'down_from_52w_high','nse_code', 'bse_code'
+
+        # 📊 Business Performance
+        'sales', 'operating_profit', 'opm', 'opm_last_year',
+
+        # 💹 Valuation
+        'pe', 'pbv', 'peg', 'earnings_yield',
+
+        # 📈 Profitability & Returns
+        'roa', 'roe', 'working_capital', 'other_income',
+
+        # 🧾 Balance Sheet & Solvency
+        'debt_to_equity', 'debt_to_ebit', 'trade_receivables', 'trade_payables', 'inventory',
+
+        # 📉 Price Signal
+        'down_from_52w_high',
+
+        # 🧳 Ownership Trends
+        'change_in_dii_holding', 'change_in_fii_holding',
+
+        # 🏷️ Identifiers
+        'nse_code', 'bse_code'
     ]
 
     rename_map = {
-        'date': 'Date', 'first_seen_date': 'First Seen', 'name': 'Name',
+        # ⏱️ Time & Identity
+        'date': 'Date',
+        'first_seen_date': 'First Seen',
+        'name': 'Name',
+
+        # 💰 Price & Market Cap
         'current_price': 'Price',
-        'market_cap': 'MCap', 'first_market_cap': 'First MCap', 'Δ% MCap': 'Δ% MCap',
-        'sales': 'Sales', 'operating_profit': 'Op Profit', 'opm': 'OPM%',
-        'opm_last_year': 'OPM LY%', 'pe': 'P/E', 'pbv': 'P/BV', 'peg': 'PEG',
-        'roa': 'ROA', 'debt_to_equity': 'D/E', 'roe': 'ROE', 'working_capital': 'WC',
-        'other_income': 'Oth Income', 'down_from_52w_high': '↓52W High%',
-        'nse_code': 'NSE', 'bse_code': 'BSE'
+        'market_cap': 'MCap',
+        'first_market_cap': 'First MCap',
+        'Δ% MCap': 'Δ% MCap',
+
+        # 📊 Business Performance
+        'sales': 'Sales',
+        'operating_profit': 'Op Profit',
+        'opm': 'OPM%',
+        'opm_last_year': 'OPM LY%',
+
+        # 💹 Valuation
+        'pe': 'P/E',
+        'pbv': 'P/BV',
+        'peg': 'PEG',
+        'earnings_yield': 'Earnings Yield',
+
+        # 📈 Returns & Profitability
+        'roa': 'ROA',
+        'roe': 'ROE',
+        'working_capital': 'WC',
+        'other_income': 'Oth Income',
+
+        # 🧾 Balance Sheet
+        'debt_to_equity': 'D/E',
+        'debt_to_ebit': 'Debt/EBIT',
+        'trade_receivables': 'Receivables',
+        'trade_payables': 'Payables',
+        'inventory': 'Inventory',
+
+        # 📉 Price Signal
+        'down_from_52w_high': '↓52W High%',
+
+        # 🧳 Institutional Holdings
+        'change_in_dii_holding': 'Δ DII',
+        'change_in_fii_holding': 'Δ FII',
+
+        # 🏷️ Codes
+        'nse_code': 'NSE',
+        'bse_code': 'BSE'
     }
 
     for industry, group_df in grouped:
