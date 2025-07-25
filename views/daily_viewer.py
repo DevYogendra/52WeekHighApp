@@ -274,7 +274,7 @@ def main():
         'current_price', 'market_cap', 'first_market_cap', 'Δ% MCap',
 
         # 📊 Business Performance
-        'sales', 'operating_profit', 'opm', 'opm_last_year',
+        'sales', 'operating_profit', 'opm', , 'trade_receivables', 'trade_payables', 'inventory', 'opm_last_year',
 
         # 💹 Valuation
         'pe', 'pbv', 'peg', 'earnings_yield',
@@ -283,7 +283,7 @@ def main():
         'roa', 'roe', 'working_capital', 'other_income',
 
         # 🧾 Balance Sheet & Solvency
-        'debt_to_equity', 'debt_to_ebit', 'trade_receivables', 'trade_payables', 'inventory',
+        'debt_to_equity', 'debt_to_ebit',
 
         # 📉 Price Signal
         'down_from_52w_high',
@@ -311,6 +311,9 @@ def main():
         'sales': 'Sales',
         'operating_profit': 'Op Profit',
         'opm': 'OPM%',
+        'trade_receivables': 'Receivables',
+        'trade_payables': 'Payables',
+        'inventory': 'Inventory',
         'opm_last_year': 'OPM LY%',
 
         # 💹 Valuation
@@ -328,9 +331,6 @@ def main():
         # 🧾 Balance Sheet
         'debt_to_equity': 'D/E',
         'debt_to_ebit': 'Debt/EBIT',
-        'trade_receivables': 'Receivables',
-        'trade_payables': 'Payables',
-        'inventory': 'Inventory',
 
         # 📉 Price Signal
         'down_from_52w_high': '↓52W High%',
