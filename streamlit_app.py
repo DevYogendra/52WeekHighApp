@@ -14,8 +14,6 @@ page_options = {
     "📈 Trend Analyzer": "trend_analyzer",
     "🌪️ Industry Tailwinds": "industry_tailwinds",
     "📈 Momentum Summary": "momentum_summary",
-#    "🏆 Top Performers": "top_performers_grouped",
-#    "🔥 Sector Heatmap": "sector_heatmap",
 }
 
 page_selection = st.sidebar.radio("Go to", list(page_options.keys()))
