@@ -170,6 +170,10 @@ def main():
                 st.dataframe(daily_df.head())
                 st.stop()
 
+            for col in ["date", "first_seen_date"]:
+                if col in daily_df.columns:
+                    daily_df[col] = pd.to_datetime(daily_df[col]).dt.date
+
             # STEP 4: Compute % change
             daily_df = compute_mcap_change(daily_df)
 
@@ -203,8 +207,11 @@ def main():
                 st.error("Required columns missing in data.")
                 return
 
+            # Ensure 'date' is clean and consistent (no time component)
             if not pd.api.types.is_datetime64_any_dtype(all_df["date"]):
                 all_df["date"] = pd.to_datetime(all_df["date"])
+
+            all_df["date"] = all_df["date"].dt.date  # Remove time part
 
             # Capture first market cap and date seen
             first_caps = (
@@ -214,7 +221,7 @@ def main():
                 .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
             )
 
-            # Include all columns needed for display
+            # Define standard columns
             standard_cols = [
                 'date', 'first_seen_date', 'name',
                 'current_price', 'market_cap', 'first_market_cap', 'Δ% MCap',
@@ -228,9 +235,15 @@ def main():
                 'nse_code', 'bse_code',
                 'industry'
             ]
-
             available_cols = [col for col in standard_cols if col in all_df.columns]
 
+            # Fix: ensure 'first_seen_date' has no time
+            all_df["first_seen_date"] = pd.to_datetime(all_df["first_seen_date"]).dt.date
+
+            #st.write("Columns in display_df:", all_df.columns.tolist())
+            #st.write("Sample data:", all_df.head()) 
+
+            # Get latest record for each name
             last_caps = (
                 all_df.sort_values(["name", "date"])
                 .groupby("name", as_index=False)
@@ -243,6 +256,7 @@ def main():
         else:
             st.warning("No data found for all dates.")
             return
+
 
     if daily_df.empty:
         st.warning("No data available after processing.")
@@ -287,21 +301,6 @@ def main():
         st.info("No records match the filters.")
         return
 
-    st.markdown("---")
-    st.markdown("### 🏭 Grouped View by Industry")
-
-    if "industry" not in filtered_df.columns:
-        st.error("Error: 'industry' column not found.")
-        return
-
-    filtered_df["industry"] = filtered_df["industry"].fillna("None")
-
-    grouped = (
-        filtered_df
-        .sort_values(["industry", "market_cap"], ascending=[True, False])
-        .groupby("industry")
-    )
-    
     standard_cols = [
         # ⏱️ Temporal & Identity
         'date', 'first_seen_date', 'name',
@@ -384,23 +383,63 @@ def main():
         'bse_code': 'BSE'
     }
 
-    for industry, group_df in grouped:
-        st.markdown(f"#### 🏷️ {industry} ({len(group_df)} companies)")
+    group_by_industry = st.checkbox("Group by Industry", value=True)
+   
+    if group_by_industry:
+        st.markdown("---")
+        st.markdown("### 🏭 Grouped View by Industry")
+
+        if "industry" not in filtered_df.columns:
+            st.error("Error: 'industry' column not found.")
+            return
+
+        filtered_df["industry"] = filtered_df["industry"].fillna("None")
+
+        grouped = (
+            filtered_df
+            .sort_values(["industry", "market_cap"], ascending=[True, False])
+            .groupby("industry")
+        )
+
+        for industry, group_df in grouped:
+            st.markdown(f"#### 🏷️ {industry} ({len(group_df)} companies)")
+
+            for col in standard_cols:
+                if col not in group_df.columns:
+                    group_df[col] = None
+
+            display_df = group_df[standard_cols + ['industry']].copy()
+            display_df = add_screener_links(display_df)
+
+            numeric_cols = display_df.select_dtypes(include='number').columns
+            display_df[numeric_cols] = display_df[numeric_cols].round(2)
+
+            display_df = display_df.drop(columns=["industry"])
+            display_df = display_df.rename(columns=rename_map)
+            display_df = display_df.sort_values(by="P/E", ascending=True, na_position='last')
+
+            styled_df = (
+                display_df.style
+                .apply(highlight_valuation_gradient, axis=1)
+                .format(precision=2)
+            )
+            st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+
+    else:
+        st.markdown("---")
+        st.markdown("### 📃 Flat Company List")
 
         for col in standard_cols:
-            if col not in group_df.columns:
-                group_df[col] = None
+            if col not in filtered_df.columns:
+                filtered_df[col] = None
 
-        display_df = group_df[standard_cols + ['industry']].copy()
+        display_df = filtered_df[standard_cols + ['industry']].copy()
         display_df = add_screener_links(display_df)
 
         numeric_cols = display_df.select_dtypes(include='number').columns
         display_df[numeric_cols] = display_df[numeric_cols].round(2)
 
-        display_df = display_df.drop(columns=["industry"])
         display_df = display_df.rename(columns=rename_map)
-
-        #st.markdown(display_df.to_html(index=False, escape=False), unsafe_allow_html=True)
         display_df = display_df.sort_values(by="P/E", ascending=True, na_position='last')
 
         styled_df = (
@@ -408,7 +447,6 @@ def main():
             .apply(highlight_valuation_gradient, axis=1)
             .format(precision=2)
         )
-
         st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
 
     st.markdown("""
@@ -422,7 +460,6 @@ def main():
         </div>
     </div>
     """, unsafe_allow_html=True)
-
 
 
     filename_date_part = date_info.replace(" ", "_").replace("to", "-").lower()

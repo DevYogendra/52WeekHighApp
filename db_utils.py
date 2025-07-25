@@ -4,6 +4,21 @@ import pandas as pd
 import streamlit as st
 from config import DB_PATH
 
+DB_PATH = "highs.db"
+
+def get_downfromhigh_dates():
+    conn = sqlite3.connect(DB_PATH)
+    query = "SELECT DISTINCT date FROM downfromhigh ORDER BY date"
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df["date"].tolist()
+
+def get_downfromhigh_data_for_date(date_str):
+    conn = sqlite3.connect(DB_PATH)
+    query = "SELECT * FROM downfromhigh WHERE date = ?"
+    df = pd.read_sql(query, conn, params=(date_str,))
+    conn.close()
+    return df
 
 # ----------------------------------------------------------------------
 # 🔗  Convenience: add clickable links for Screener.in
