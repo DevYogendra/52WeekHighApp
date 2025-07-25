@@ -235,23 +235,41 @@ def main():
                 'nse_code', 'bse_code',
                 'industry'
             ]
-            available_cols = [col for col in standard_cols if col in all_df.columns]
+            
+            
+            # Step 1: Get earliest market cap per company
+            first_caps = (
+                all_df.sort_values(["name", "date"])
+                .groupby("name", as_index=False)
+                .first()[["name", "market_cap", "date"]]
+                .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
+            )
 
-            # Fix: ensure 'first_seen_date' has no time
-            all_df["first_seen_date"] = pd.to_datetime(all_df["first_seen_date"]).dt.date
-
-            #st.write("Columns in display_df:", all_df.columns.tolist())
-            #st.write("Sample data:", all_df.head()) 
-
-            # Get latest record for each name
+            # Step 2: Get latest data per company
             last_caps = (
                 all_df.sort_values(["name", "date"])
                 .groupby("name", as_index=False)
-                .last()[available_cols]
+                .last()
             )
 
-            # Merge
+            # 🔁 Drop any existing first_seen_date or first_market_cap to avoid _x/_y mess
+            last_caps = last_caps.drop(columns=["first_seen_date", "first_market_cap"], errors="ignore")
+
+            # Step 3: Merge
             daily_df = last_caps.merge(first_caps, on="name", how="left")
+
+            # st.write("Available columns:", daily_df.columns.tolist())
+
+
+            # Step 4: Clean date columns
+            for col in ["date", "first_seen_date"]:
+                if col in daily_df.columns:
+                    daily_df[col] = pd.to_datetime(daily_df[col]).dt.date
+
+            # Convert dates
+            for col in ["date", "first_seen_date"]:
+                if col in daily_df.columns:
+                    daily_df[col] = pd.to_datetime(daily_df[col]).dt.date
 
         else:
             st.warning("No data found for all dates.")
