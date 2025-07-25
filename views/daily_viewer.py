@@ -280,10 +280,13 @@ def main():
         'pe', 'pbv', 'peg', 'earnings_yield',
 
         # 📈 Profitability & Returns
-        'roa', 'roe', 'working_capital', 'other_income',
+        'roa', 'roe', 
+        # 'working_capital', 
+        'other_income',
 
         # 🧾 Balance Sheet & Solvency
-        'debt_to_equity', 'debt_to_ebit',
+        'debt_to_equity', 
+        # 'debt_to_ebit',
 
         # 📉 Price Signal
         'down_from_52w_high',
@@ -325,12 +328,12 @@ def main():
         # 📈 Returns & Profitability
         'roa': 'ROA',
         'roe': 'ROE',
-        'working_capital': 'WC',
+#        'working_capital': 'WC',
         'other_income': 'Oth Income',
 
         # 🧾 Balance Sheet
         'debt_to_equity': 'D/E',
-        'debt_to_ebit': 'Debt/EBIT',
+#        'debt_to_ebit': 'Debt/EBIT',
 
         # 📉 Price Signal
         'down_from_52w_high': '↓52W High%',
