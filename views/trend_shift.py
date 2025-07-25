@@ -51,6 +51,8 @@ def main():
     st.markdown("Compare weekly changes in momentum for stocks and industries.")
 
     df = get_historical_market_cap()
+    st.write(df.columns.tolist())
+    st.write(df.head())    
     df["date"] = pd.to_datetime(df["date"])  # Ensure date column is datetime
 
     today = datetime.date.today()
@@ -123,10 +125,22 @@ def main():
             "hits_delta": "Δ Hits",
             "gain_delta": "Δ Gain"
         })
+        
         df["MCap"] = df["MCap"].apply(lambda x: f"₹{x:,.0f}")
-        df["%Gain LW"] = df["%Gain LW"].round(1)
-        df["%Gain TW"] = df["%Gain TW"].round(1)
-        df["Δ Gain"] = df["Δ Gain"].round(1)
+        # Ensure numeric formatting before fillna
+        for col in ["%Gain LW", "%Gain TW", "Δ Gain"]:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors="coerce").round(1)
+
+        # Format MCap column
+        if "MCap" in df.columns:
+            df["MCap"] = pd.to_numeric(df["MCap"], errors="coerce").apply(
+                lambda x: f"₹{x:,.0f}" if pd.notna(x) else "—"
+            )
+
+        # Final fill to avoid pandas.NA errors during to_markdown
+        df = df.fillna("—")
+
         st.markdown(f"### {title}")
         st.markdown("""
         - **Company**: Clickable name linking to Screener.in
