@@ -3,8 +3,8 @@ import pandas as pd
 import datetime
 from dateutil.relativedelta import relativedelta
 from db_utils import (
-    get_downfromhigh_dates,
-    get_downfromhigh_data_for_date,
+    get_fivetofiftyclub_dates,
+    get_fivetofiftyclub_data_for_date,
     get_historical_market_cap,
     add_screener_links,
 )
@@ -14,26 +14,26 @@ from matplotlib.colors import Normalize, to_hex
 
 def highlight_valuation_gradient(row):
     def get_style(val, vmin, vmax):
-        if pd.isna(val):
-            return None
-        norm = Normalize(vmin=vmin, vmax=vmax)
-        cmap = cm.get_cmap('RdYlGn_r')
-        rgba = cmap(norm(min(val, vmax)))  # cap at vmax
-        bg_color = to_hex(rgba)
+        try:
+            val = float(val)
+            val = min(val, vmax)
+            norm = Normalize(vmin=vmin, vmax=vmax)
+            rgba = cm.get_cmap('RdYlGn_r')(norm(val))
+            bg_color = to_hex(rgba)
+            
+            r, g, b = rgba[:3]
+            luminance = 0.299 * r + 0.587 * g + 0.114 * b
+            text_color = "#000000" if luminance > 0.6 else "#FFFFFF"
 
-        # Compute luminance for contrasting text color
-        r, g, b = rgba[:3]
-        luminance = 0.299 * r + 0.587 * g + 0.114 * b
-        text_color = "#000000" if luminance > 0.6 else "#FFFFFF"
-
-        return f"background-color: {bg_color}; color: {text_color}; font-weight: bold;"
+            return f"background-color: {bg_color}; color: {text_color}; font-weight: bold;"
+        except:
+            return ""
 
     styles = []
     for col in row.index:
-        if col == "P/E":
-            styles.append(get_style(row[col], vmin=0, vmax=60) or "")
-        elif col == "P/BV":
-            styles.append(get_style(row[col], vmin=0, vmax=12) or "")
+        if col in ["P/E", "P/BV"]:  # Only apply gradient to relevant columns
+            vmax = 60 if col == "P/E" else 12
+            styles.append(get_style(row[col], vmin=0, vmax=vmax))
         else:
             styles.append("")
     return styles
@@ -52,9 +52,9 @@ def compute_mcap_change(df):
 
 
 def main():
-    st.title("📉 Big Dippers (50%+ Down)")
+    st.title("📉 5–50% from 52W High")
 
-    dates = get_downfromhigh_dates()
+    dates = get_fivetofiftyclub_dates()
     if not dates:
         st.warning("No data available.")
         return
@@ -68,7 +68,7 @@ def main():
 
     if date_mode == "Single Date":
         selected_date = st.selectbox("Select a date", dates, index=len(dates) - 1)
-        daily_df = get_downfromhigh_data_for_date(str(selected_date))
+        daily_df = get_fivetofiftyclub_data_for_date(str(selected_date))
 
     elif date_mode == "Date Range":
         end_date_default = max_date_available
@@ -101,12 +101,12 @@ def main():
             return
 
         selected_dates_str = [d.strftime("%Y-%m-%d") for d in dates if start_date <= d <= end_date]
-        dfs = [get_downfromhigh_data_for_date(d_str) for d_str in selected_dates_str]
+        dfs = [get_fivetofiftyclub_data_for_date(d_str) for d_str in selected_dates_str]
         daily_df = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
 
     else:  # All Dates
         all_dates_str = [d.strftime("%Y-%m-%d") for d in dates]
-        dfs = [get_downfromhigh_data_for_date(d_str) for d_str in all_dates_str]
+        dfs = [get_fivetofiftyclub_data_for_date(d_str) for d_str in all_dates_str]
         #daily_df = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
         if dfs:
             all_df = pd.concat(dfs, ignore_index=True)
@@ -181,7 +181,7 @@ def main():
         
         else:
             st.warning("No data found for all dates.")
-            return
+            return        
 
     if daily_df.empty:
         st.warning("No data available after processing.")
@@ -307,10 +307,11 @@ def main():
             display_df = add_screener_links(display_df)
 
             # st.write("Available columns:", daily_df.columns.tolist())
+            
             for col in ["pe", "pbv"]:
                 if col in display_df.columns:
-                    display_df[col] = pd.to_numeric(display_df[col], errors="coerce")
-
+                    display_df[col] = pd.to_numeric(display_df[col], errors="coerce")            
+                        
             if "pe" in display_df.columns:
                 display_df = display_df.sort_values(by="pe", ascending=True, na_position='last')
 

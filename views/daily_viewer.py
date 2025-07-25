@@ -53,7 +53,7 @@ def compute_mcap_change(df):
 
 
 def main():
-    st.title("📅 Daily 52-Week Highs Viewer")
+    st.title("📈 Within 5% of 52W High")
 
     dates = get_all_dates()
     if not dates:
