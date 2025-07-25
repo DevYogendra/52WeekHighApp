@@ -274,7 +274,7 @@ def main():
         'current_price', 'market_cap', 'first_market_cap', 'Δ% MCap',
 
         # 📊 Business Performance
-        'sales', 'operating_profit', 'opm', , 'trade_receivables', 'trade_payables', 'inventory', 'opm_last_year',
+        'sales', 'operating_profit', 'opm', 'trade_receivables', 'trade_payables', 'inventory', 'opm_last_year',
 
         # 💹 Valuation
         'pe', 'pbv', 'peg', 'earnings_yield',
