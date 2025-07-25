@@ -401,11 +401,14 @@ def main():
         display_df = display_df.rename(columns=rename_map)
 
         #st.markdown(display_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+        display_df = display_df.sort_values(by="P/E", ascending=True, na_position='last')
+
         styled_df = (
             display_df.style
             .apply(highlight_valuation_gradient, axis=1)
             .format(precision=2)
         )
+
         st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
 
     st.markdown("""
