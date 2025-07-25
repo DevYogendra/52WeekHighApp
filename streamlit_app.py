@@ -7,9 +7,9 @@ st.set_page_config(page_title="52-Week High Tracker", layout="wide")
 # Sidebar navigation
 st.sidebar.title("📊 Navigation")
 page_options = {
-    "📈 Within 5% of 52W High": "daily_viewer",
-    "📉 5–50% from 52W High": "fivetofiftyclub_viewer",    
-    "📉 Big Dippers (50%+ Down)": "downfromhigh_viewer",        
+    "📈 Within 5% of 52W High": "01_within_5pct_of_52w_high",
+    "📉 5–50% from 52W High": "02_five_to_fifty_pct_from_52w_high",    
+    "📉 Big Dippers (50%+ Down)": "03_big_dippers_50pct_plus_down",        
     "📊 Trend Shift Analyzer": "trend_shift",
     "🔥 Emerging Winners": "emerging_winners",
     "📈 Trend Analyzer": "trend_analyzer",
