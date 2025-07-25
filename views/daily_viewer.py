@@ -442,30 +442,43 @@ def main():
                 .format(precision=2)
             )
             st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
-
     else:
         st.markdown("---")
         st.markdown("### 📃 Flat Company List")
 
+        view_mode = st.checkbox("Use Styled View (color gradients)", value=False)
+        
         for col in standard_cols:
             if col not in filtered_df.columns:
                 filtered_df[col] = None
-
+        
         display_df = filtered_df[standard_cols + ['industry']].copy()
-        display_df = add_screener_links(display_df)
 
-        numeric_cols = display_df.select_dtypes(include='number').columns
-        display_df[numeric_cols] = display_df[numeric_cols].round(2)
+        if view_mode:
+            # Add Screener links — non-intrusive
+            display_df = add_screener_links(display_df)
 
-        display_df = display_df.rename(columns=rename_map)
-        display_df = display_df.sort_values(by="P/E", ascending=True, na_position='last')
+            numeric_cols = display_df.select_dtypes(include='number').columns
+            display_df[numeric_cols] = display_df[numeric_cols].round(2)
 
-        styled_df = (
-            display_df.style
-            .apply(highlight_valuation_gradient, axis=1)
-            .format(precision=2)
-        )
-        st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+            display_df = display_df.rename(columns=rename_map)
+            display_df = display_df.sort_values(by="P/E", ascending=True, na_position='last')
+            
+            styled_df = (
+                display_df.style
+                .apply(highlight_valuation_gradient, axis=1)
+                .format(precision=2)
+            )
+            st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+        else:
+
+            numeric_cols = display_df.select_dtypes(include='number').columns
+            display_df[numeric_cols] = display_df[numeric_cols].round(2)
+
+            display_df = display_df.rename(columns=rename_map)
+            display_df = display_df.sort_values(by="P/E", ascending=True, na_position='last')
+            
+            st.dataframe(display_df, use_container_width=True)
 
     st.markdown("""
     <div style="margin: 1em 0;">

@@ -217,8 +217,9 @@ def main():
     else:
         st.markdown("### 📃 Flat Company List")
 
+        view_mode = st.checkbox("Use Styled View (color gradients)", value=False)
 
-
+        # Fill missing columns
         # Fill missing columns
         for col in standard_cols:
             if col not in daily_df.columns:
@@ -227,28 +228,52 @@ def main():
         full_cols = standard_cols + (['industry'] if 'industry' not in standard_cols else [])
         display_df = daily_df[full_cols].copy()
 
-        # Add Screener links
-        display_df = add_screener_links(display_df)
+        if view_mode:
+            # Add Screener links — non-intrusive
+            display_df = add_screener_links(display_df)
 
-        for col in ["P/E", "P/BV"]:
-            if col in display_df.columns:
-                display_df[col] = pd.to_numeric(display_df[col], errors="coerce")
+            for col in ["P/E", "P/BV"]:
+                if col in display_df.columns:
+                    display_df[col] = pd.to_numeric(display_df[col], errors="coerce")
 
-        numeric_cols = display_df.select_dtypes(include='number').columns
-        display_df[numeric_cols] = display_df[numeric_cols].round(2)
+            if "P/E" in display_df.columns:
+                display_df = display_df.sort_values(by="P/E", ascending=True, na_position='last')
 
-        display_df = display_df.rename(columns=rename_map)
+            # 🧽 Drop screener link in plain view to avoid clutter
+            if not view_mode and "Screener" in display_df.columns:
+                display_df = display_df.drop(columns=["Screener"])
 
-        if "P/E" in display_df.columns:
-            display_df = display_df.sort_values(by="P/E", ascending=True, na_position='last')
+            
+            numeric_cols = display_df.select_dtypes(include='number').columns
+            display_df[numeric_cols] = display_df[numeric_cols].round(2)
 
-        styled_df = (
-            display_df.style
-            .apply(highlight_valuation_gradient, axis=1)
-            .format(precision=2)
-        )
+            display_df = display_df.rename(columns=rename_map)
+            
+            styled_df = (
+                display_df.style
+                .apply(highlight_valuation_gradient, axis=1)
+                .format(precision=2)
+            )
+            st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+        else:
+            
+            for col in ["P/E", "P/BV"]:
+                if col in display_df.columns:
+                    display_df[col] = pd.to_numeric(display_df[col], errors="coerce")
 
-        st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+            if "P/E" in display_df.columns:
+                display_df = display_df.sort_values(by="P/E", ascending=True, na_position='last')
+
+            # 🧽 Drop screener link in plain view to avoid clutter
+            if not view_mode and "Screener" in display_df.columns:
+                display_df = display_df.drop(columns=["Screener"])
+            
+            numeric_cols = display_df.select_dtypes(include='number').columns
+            display_df[numeric_cols] = display_df[numeric_cols].round(2)
+
+            display_df = display_df.rename(columns=rename_map)
+            
+            st.dataframe(display_df, use_container_width=True)
 
     st.markdown("🟩 Green = low valuation | 🟥 Red = high valuation")
 
