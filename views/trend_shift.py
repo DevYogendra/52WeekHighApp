@@ -132,12 +132,6 @@ def main():
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors="coerce").round(1)
 
-        # Format MCap column
-        if "MCap" in df.columns:
-            df["MCap"] = pd.to_numeric(df["MCap"], errors="coerce").apply(
-                lambda x: f"₹{x:,.0f}" if pd.notna(x) else "—"
-            )
-
         # Final fill to avoid pandas.NA errors during to_markdown
         df = df.fillna("—")
 
