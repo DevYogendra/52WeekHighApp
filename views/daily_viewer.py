@@ -8,6 +8,35 @@ from db_utils import (
     add_screener_links,
     get_historical_market_cap,   # 👈 NEW
 )
+from matplotlib import cm
+from matplotlib.colors import Normalize, to_hex
+
+def highlight_valuation_gradient(row):
+    def get_style(val, vmin, vmax):
+        if pd.isna(val):
+            return None
+        norm = Normalize(vmin=vmin, vmax=vmax)
+        cmap = cm.get_cmap('RdYlGn_r')
+        rgba = cmap(norm(min(val, vmax)))  # cap at vmax
+        bg_color = to_hex(rgba)
+
+        # Compute luminance for contrasting text color
+        r, g, b = rgba[:3]
+        luminance = 0.299 * r + 0.587 * g + 0.114 * b
+        text_color = "#000000" if luminance > 0.6 else "#FFFFFF"
+
+        return f"background-color: {bg_color}; color: {text_color}; font-weight: bold;"
+
+    styles = []
+    for col in row.index:
+        if col == "P/E":
+            styles.append(get_style(row[col], vmin=0, vmax=60) or "")
+        elif col == "P/BV":
+            styles.append(get_style(row[col], vmin=0, vmax=12) or "")
+        else:
+            styles.append("")
+    return styles
+
 
 # from .exclusion_filter import render_exclusion_ui
 
@@ -371,7 +400,27 @@ def main():
         display_df = display_df.drop(columns=["industry"])
         display_df = display_df.rename(columns=rename_map)
 
-        st.markdown(display_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+        #st.markdown(display_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+        styled_df = (
+            display_df.style
+            .apply(highlight_valuation_gradient, axis=1)
+            .format(precision=2)
+        )
+        st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="margin: 1em 0;">
+        <strong>Valuation Color Legend</strong><br>
+        Applies to: <code>P/E (0–60)</code> and <code>P/BV (0–12)</code>
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85em; margin-top: 0.5em;">
+            <div style="width: 120px;">Low (Undervalued)</div>
+            <div style="height: 15px; width: 150px; background: linear-gradient(to right, #1a9850, #fee08b, #d73027); border: 1px solid #ccc;"></div>
+            <div style="width: 120px;">High (Overvalued)</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 
     filename_date_part = date_info.replace(" ", "_").replace("to", "-").lower()
     st.download_button(
