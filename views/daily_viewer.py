@@ -185,15 +185,22 @@ def main():
                 .rename(columns={"market_cap": "first_market_cap", "date": "first_seen_date"})
             )
 
-            # Capture latest data with all needed columns
-            latest_cols = [
-                "name", "date", "market_cap", "industry", "current_price", "sales",
-                "operating_profit", "opm", "opm_last_year", "pe", "pbv", "peg",
-                "roa", "debt_to_equity", "roe", "working_capital", "other_income",
-                "down_from_52w_high", "nse_code", "bse_code"
+            # Include all columns needed for display
+            standard_cols = [
+                'date', 'first_seen_date', 'name',
+                'current_price', 'market_cap', 'first_market_cap', 'Δ% MCap',
+                'sales', 'opm', 'opm_last_year', 'operating_profit', 'trade_receivables', 'trade_payables', 'inventory',
+                'pe', 'pbv', 'peg', 'earnings_yield',
+                'roa', 'roe',
+                'other_income',
+                'debt_to_equity',
+                'down_from_52w_high',
+                'change_in_dii_holding', 'change_in_fii_holding',
+                'nse_code', 'bse_code',
+                'industry'
             ]
 
-            available_cols = [col for col in latest_cols if col in all_df.columns]
+            available_cols = [col for col in standard_cols if col in all_df.columns]
 
             last_caps = (
                 all_df.sort_values(["name", "date"])
