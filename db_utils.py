@@ -42,6 +42,7 @@ def add_screener_links(df: pd.DataFrame) -> pd.DataFrame:
 # ----------------------------------------------------------------------
 @st.cache_data
 def get_momentum_summary() -> pd.DataFrame:
+    import datetime
     today = datetime.date.today()
     conn = sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES)
 
@@ -55,12 +56,12 @@ def get_momentum_summary() -> pd.DataFrame:
         """
         return pd.read_sql(q, conn, params=(since,)).set_index("name")
 
-    # rolling hit counts
+    # Rolling hit counts
     counts7  = _hit_counts(7)
     counts30 = _hit_counts(30)
     counts60 = _hit_counts(60)
 
-    # most‑recent snapshot for each stock
+    # Latest snapshot for each stock
     latest = pd.read_sql(
         """
         SELECT h1.*
@@ -74,31 +75,32 @@ def get_momentum_summary() -> pd.DataFrame:
         conn,
     ).set_index("name")
 
-    latest["%_gain_mc"] = 100 * (
-        latest["market_cap"] - latest["first_market_cap"]
-    ) / latest["first_market_cap"]
+    # Add missing columns if needed (due to old rows)
+    for col in ["market_cap", "first_market_cap", "first_seen_date"]:
+        if col not in latest.columns:
+            latest[col] = pd.NA
 
-    df = latest[
-        [
-            "nse_code",
-            "bse_code",
-            "industry",
-            "market_cap",
-            "first_market_cap",
-            "first_seen_date",
-            "%_gain_mc",
-        ]
+    latest["%_gain_mc"] = (
+        100 * (latest["market_cap"] - latest["first_market_cap"])
+        / latest["first_market_cap"].replace(0, pd.NA)
+    )
+
+    required_cols = [
+        "nse_code", "bse_code", "industry", "market_cap",
+        "first_market_cap", "first_seen_date", "%_gain_mc"
     ]
+    for col in required_cols:
+        if col not in latest.columns:
+            latest[col] = pd.NA
+
+    df = latest[required_cols]
     df = df.join(counts7).join(counts30).join(counts60)
 
-    # -- type hygiene ---------------------------------------------------
+    # Type hygiene
     if "bse_code" in df.columns:
-        # NOTE: **no .dropna()** – keeps the index aligned
         df["bse_code"] = pd.to_numeric(df["bse_code"], errors="coerce").astype("Int64")
-
     if "nse_code" in df.columns:
         df["nse_code"] = df["nse_code"].astype("string")
-
     if "industry" in df.columns:
         df["industry"] = df["industry"].astype("string")
 
@@ -109,13 +111,21 @@ def get_momentum_summary() -> pd.DataFrame:
 @st.cache_data
 def get_historical_market_cap() -> pd.DataFrame:
     conn = sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES)
-    df = pd.read_sql(
-        "SELECT date, name, nse_code, bse_code, industry, market_cap FROM highs", conn
-    )
+    df = pd.read_sql("SELECT * FROM highs", conn)
+    
     df["date"] = pd.to_datetime(df["date"])
 
     if "bse_code" in df.columns:
         df["bse_code"] = pd.to_numeric(df["bse_code"], errors="coerce").astype("Int64")
+
+    if "nse_code" in df.columns:
+        df["nse_code"] = df["nse_code"].astype("string")
+
+    if "industry" in df.columns:
+        df["industry"] = df["industry"].astype("string")
+
+    if "name" in df.columns:
+        df["name"] = df["name"].astype("string")
 
     conn.close()
     return df
