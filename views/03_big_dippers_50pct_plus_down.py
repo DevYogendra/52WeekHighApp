@@ -16,6 +16,10 @@ def highlight_valuation_gradient(row):
     def get_style(val, vmin, vmax):
         if pd.isna(val):
             return None
+        try:
+            val = float(val)  # Convert to numeric
+        except (ValueError, TypeError):
+            return None  # Skip if not convertible
         norm = Normalize(vmin=vmin, vmax=vmax)
         cmap = cm.get_cmap('RdYlGn_r')
         rgba = cmap(norm(min(val, vmax)))  # cap at vmax

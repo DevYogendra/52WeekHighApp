@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter / misc
+.ipynb_checkpoints/
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# SQLite (optional if you're using DB locally)
+*.db

@@ -15,6 +15,7 @@ page_options = {
     "📈 Trend Analyzer": "trend_analyzer",
     "🌪️ Industry Tailwinds": "industry_tailwinds",
     "📈 Momentum Summary": "momentum_summary",
+    "🏹 Multi-Bagger Hunt": "multi_bagger_hunt",
 }
 
 page_selection = st.sidebar.radio("Go to", list(page_options.keys()))
