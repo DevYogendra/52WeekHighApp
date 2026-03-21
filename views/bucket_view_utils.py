@@ -3,7 +3,7 @@ from matplotlib import cm
 from matplotlib.colors import Normalize, to_hex
 import re
 
-from db_utils import add_screener_links, format_decimal_columns, format_major_columns
+from db_utils import format_decimal_columns, format_major_columns
 
 
 COMMON_RENAME_MAP = {
@@ -168,7 +168,7 @@ def prepare_display_df(df, columns, sort_by, sort_options, include_industry=Fals
         sort_options,
         include_industry=include_industry,
         rename_map=rename_map,
-        render_links=True,
+        render_links=False,
     )
 
 
@@ -188,13 +188,11 @@ def prepare_display_df_for_mode(
 
     selected_cols = columns + (["industry"] if include_industry else [])
     display_df = working[selected_cols].copy()
-    if render_links:
-        display_df = add_screener_links(display_df)
     if include_industry and "industry" in display_df.columns:
         display_df = display_df.drop(columns=["industry"])
 
     display_df = display_df.rename(columns=rename_map or COMMON_RENAME_MAP)
-    if not render_links and "Name" in display_df.columns:
+    if "Name" in display_df.columns:
         display_df["Name"] = display_df["Name"].map(
             lambda value: "" if pd.isna(value) else _TAG_RE.sub("", str(value))
         )

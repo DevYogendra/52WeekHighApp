@@ -193,40 +193,37 @@ def main():
     grouped_tab, list_tab = st.tabs(["Grouped by Industry", "Company List"])
 
     with grouped_tab:
-        grouped = (
-            filtered_df.assign(industry=filtered_df["industry"].fillna("Unknown"))
-            .sort_values(["industry", "market_cap"], ascending=[True, False])
-            .groupby("industry")
-        )
+        grouped_source = filtered_df.assign(industry=filtered_df["industry"].fillna("Unknown"))
+        grouped_industries = sorted(grouped_source["industry"].dropna().unique().tolist())
+        selected_group_industry = st.selectbox("Grouped industry", grouped_industries, key="pullback_grouped_industry")
+        group_df = grouped_source[grouped_source["industry"] == selected_group_industry].copy()
+        avg_group_drop = pd.to_numeric(group_df.get("down_from_52w_high"), errors="coerce").mean()
+        avg_group_pe = pd.to_numeric(group_df.get("pe"), errors="coerce").mean()
+        header = f"{selected_group_industry} ({len(group_df)} companies)"
+        if pd.notna(avg_group_drop):
+            header += f" | avg drop {avg_group_drop:.1f}%"
+        if pd.notna(avg_group_pe):
+            header += f" | avg P/E {avg_group_pe:.1f}"
+        st.markdown(f"#### {header}")
 
-        for industry, group_df in grouped:
-            avg_group_drop = pd.to_numeric(group_df.get("down_from_52w_high"), errors="coerce").mean()
-            avg_group_pe = pd.to_numeric(group_df.get("pe"), errors="coerce").mean()
-            header = f"{industry} ({len(group_df)} companies)"
-            if pd.notna(avg_group_drop):
-                header += f" | avg drop {avg_group_drop:.1f}%"
-            if pd.notna(avg_group_pe):
-                header += f" | avg P/E {avg_group_pe:.1f}"
-            st.markdown(f"#### {header}")
-
-            render_interactive_table(
-                prepare_grid_df(
-                    group_df,
-                    selected_cols,
-                    sort_by,
-                    SORT_OPTIONS,
-                    include_industry=True,
-                    rename_map=COMMON_RENAME_MAP,
-                ),
-                columns=selected_cols,
-                key=f"pullback_group_{industry}",
+        render_interactive_table(
+            prepare_grid_df(
+                group_df,
+                selected_cols,
+                sort_by,
+                SORT_OPTIONS,
+                include_industry=True,
                 rename_map=COMMON_RENAME_MAP,
-                one_decimal_cols=BUCKET_ONE_DECIMAL_COLS,
-                two_decimal_cols=BUCKET_TWO_DECIMAL_COLS,
-                major_cols=BUCKET_MAJOR_COLS,
-                link_col="name",
-                height=320 if view_scope == "Focused" else 420,
-            )
+            ),
+            columns=selected_cols,
+            key=f"pullback_group_{selected_group_industry}",
+            rename_map=COMMON_RENAME_MAP,
+            one_decimal_cols=BUCKET_ONE_DECIMAL_COLS,
+            two_decimal_cols=BUCKET_TWO_DECIMAL_COLS,
+            major_cols=BUCKET_MAJOR_COLS,
+            link_col="name",
+            height=320 if view_scope == "Focused" else 420,
+        )
 
     with list_tab:
         render_interactive_table(

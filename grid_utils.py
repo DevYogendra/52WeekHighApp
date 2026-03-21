@@ -118,33 +118,6 @@ def _js_major_formatter() -> "JsCode":
     )
 
 
-def _link_renderer(url_field: str) -> "JsCode":
-    return JsCode(
-        f"""
-        class LinkRenderer {{
-            init(params) {{
-                const text = params.value ?? "";
-                const url = params.data ? params.data["{url_field}"] : null;
-                if (!url) {{
-                    this.eGui = document.createElement("span");
-                    this.eGui.textContent = text;
-                    return;
-                }}
-                this.eGui = document.createElement("a");
-                this.eGui.href = url;
-                this.eGui.target = "_blank";
-                this.eGui.rel = "noopener noreferrer";
-                this.eGui.textContent = text;
-            }}
-
-            getGui() {{
-                return this.eGui;
-            }}
-        }}
-        """
-    )
-
-
 def _format_for_fallback(
     df: pd.DataFrame,
     integer_cols: Iterable[str],
@@ -196,6 +169,7 @@ def render_interactive_table(
     link_col: str | None = None,
     height: int = 360,
     fit_columns: bool = False,
+    max_rows: int = 1000,
 ) -> None:
     if df.empty:
         st.info("No matching data available.")
@@ -206,6 +180,11 @@ def render_interactive_table(
     one_decimal_cols = one_decimal_cols or []
     two_decimal_cols = two_decimal_cols or []
     major_cols = major_cols or []
+
+    source_count = len(df)
+    if source_count > max_rows:
+        st.warning(f"Showing first {max_rows:,} of {source_count:,} rows to keep the page responsive. Narrow the filters for more precise results.")
+        df = df.head(max_rows).copy()
 
     working = df.loc[:, columns].copy()
     url_field = None
@@ -254,7 +233,7 @@ def render_interactive_table(
         wrapHeaderText=True,
         autoHeaderHeight=True,
     )
-    gb.configure_grid_options(alwaysMultiSort=True, animateRows=False)
+    gb.configure_grid_options(alwaysMultiSort=True, animateRows=False, pagination=True, paginationPageSize=50)
 
     for col in integer_cols:
         gb.configure_column(
@@ -286,7 +265,7 @@ def render_interactive_table(
 
     if link_col and url_field:
         renamed_link_col = rename_map.get(link_col, link_col)
-        gb.configure_column(renamed_link_col, pinned="left", cellRenderer=_link_renderer(url_field))
+        gb.configure_column(renamed_link_col, pinned="left")
         gb.configure_column(url_field, hide=True)
 
     grid_options = gb.build()

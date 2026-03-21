@@ -2,9 +2,43 @@
 
 import pandas as pd
 import streamlit as st
+import re
 
 from db_utils import compute_industry_tailwind_stats, get_momentum_summary
 from grid_utils import render_interactive_table
+
+_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _format_detail_table(df: pd.DataFrame) -> pd.DataFrame:
+    detail_df = df[
+        ["name", "hits_7", "hits_30", "hits_60", "%_gain_mc", "market_cap", "first_seen_date"]
+    ].copy()
+    detail_df = detail_df.rename(
+        columns={
+            "name": "Stock",
+            "hits_7": "Hits 7D",
+            "hits_30": "Hits 30D",
+            "hits_60": "Hits 60D",
+            "%_gain_mc": "Gain %",
+            "market_cap": "Market Cap",
+            "first_seen_date": "First Seen",
+        }
+    )
+    detail_df["Stock"] = detail_df["Stock"].map(
+        lambda value: "" if pd.isna(value) else _TAG_RE.sub("", str(value))
+    )
+    for col in ["Hits 7D", "Hits 30D", "Hits 60D"]:
+        detail_df[col] = pd.to_numeric(detail_df[col], errors="coerce").astype("Int64")
+    detail_df["Gain %"] = pd.to_numeric(detail_df["Gain %"], errors="coerce").map(
+        lambda value: "-" if pd.isna(value) else f"{value:.1f}"
+    )
+    detail_df["Market Cap"] = pd.to_numeric(detail_df["Market Cap"], errors="coerce").map(
+        lambda value: "-" if pd.isna(value) else f"{value:,.0f}"
+    )
+    detail_df["First Seen"] = pd.to_datetime(detail_df["First Seen"], errors="coerce").dt.strftime("%Y-%m-%d")
+    detail_df["First Seen"] = detail_df["First Seen"].fillna("-")
+    return detail_df
 
 
 def main():
@@ -76,22 +110,8 @@ def main():
         )
 
         with st.expander(expander_label, expanded=False):
-            render_interactive_table(
-                industry_stocks,
-                columns=["name", "hits_7", "hits_30", "hits_60", "%_gain_mc", "market_cap", "first_seen_date"],
-                key=f"industry_tailwinds_{industry_name}",
-                rename_map={
-                    "name": "Stock",
-                    "hits_7": "Hits 7D",
-                    "hits_30": "Hits 30D",
-                    "hits_60": "Hits 60D",
-                    "%_gain_mc": "Gain %",
-                    "market_cap": "Market Cap",
-                    "first_seen_date": "First Seen",
-                },
-                integer_cols=["hits_7", "hits_30", "hits_60"],
-                one_decimal_cols=["%_gain_mc"],
-                major_cols=["market_cap"],
-                link_col="name",
-                height=260,
+            st.dataframe(
+                _format_detail_table(industry_stocks),
+                use_container_width=True,
+                hide_index=True,
             )
