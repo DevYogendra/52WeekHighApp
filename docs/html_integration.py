@@ -1,282 +1,166 @@
 """
-HTML Documentation Helper Module
-Provides easy integration of HTML documentation pages in Streamlit app
+HTML documentation integration helpers for the Streamlit app.
 """
 
-import streamlit as st
 from pathlib import Path
-import webbrowser
+
+import streamlit as st
 
 
 class DocumentationHelper:
-    """Helper class to integrate HTML documentation in Streamlit"""
-    
-    def __init__(self, docs_dir: str = "docs"):
-        """Initialize documentation helper"""
+    """Render bundled HTML documentation inside the app or as external links."""
+
+    def __init__(self, docs_dir: str | Path = "docs"):
         self.docs_dir = Path(docs_dir)
         self.pages = {
             "Quick Start": "quick-start.html",
             "Interpretation Guide": "interpretation-guide.html",
             "Financial Glossary": "glossary.html",
-            "Documentation Hub": "index.html"
+            "Documentation Hub": "index.html",
         }
-    
-    def add_sidebar_navigation(self):
-        """Add documentation navigation to Streamlit sidebar"""
-        with st.sidebar:
-            st.divider()
-            st.subheader("📚 Help & Reference")
-            
-            # Quick links in columns
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("🚀 Quick Start", use_container_width=True, key="help_qs"):
-                    self.open_help_page("Quick Start")
-            
-            with col2:
-                if st.button("📖 How to Read", use_container_width=True, key="help_ig"):
-                    self.open_help_page("Interpretation Guide")
-            
-            # Lower priority links
-            if st.button("📚 Glossary", use_container_width=True, key="help_gl"):
-                self.open_help_page("Financial Glossary")
-            
-            if st.button("🏠 All Docs", use_container_width=True, key="help_hub"):
-                self.open_help_page("Documentation Hub")
-    
-    def add_main_help_page(self):
-        """Create a dedicated Help page in main view"""
-        st.set_page_config(page_title="Help Center", layout="wide")
-        
-        st.title("📚 Help Center")
-        st.write("Complete documentation and reference guides for the 52-Week High Tracker app.")
-        
-        # Tabs for different sections
-        tab1, tab2, tab3, tab4 = st.tabs([
-            "Quick Start",
-            "Interpretation",
-            "Glossary",
-            "Documentation Hub"
-        ])
-        
-        with tab1:
-            self._display_page_content("Quick Start")
-        
-        with tab2:
-            self._display_page_content("Interpretation Guide")
-        
-        with tab3:
-            self._display_page_content("Financial Glossary")
-        
-        with tab4:
-            self._display_page_content("Documentation Hub")
-    
-    def _display_page_content(self, page_name: str):
-        """Display HTML page content in Streamlit"""
-        html_file = self.docs_dir / self.pages[page_name]
-        
-        if not html_file.exists():
-            st.error(f"Documentation file not found: {html_file}")
-            return
-        
-        try:
-            with open(html_file, "r", encoding="utf-8") as f:
-                html_content = f.read()
-            
-            # Extract body content (remove header/footer for embedding)
-            # This is a simplified approach - you may need to adjust based on structure
-            if "<body>" in html_content:
-                body_start = html_content.find("<body>") + 6
-                body_end = html_content.find("</body>")
-                body_content = html_content[body_start:body_end]
-            else:
-                body_content = html_content
-            
-            # Display in Streamlit
-            st.markdown(
-                body_content,
-                unsafe_allow_html=True
-            )
-            
-        except Exception as e:
-            st.error(f"Error loading documentation: {str(e)}")
-    
-    def open_help_page(self, page_name: str):
-        """Open help page in browser or display options"""
-        html_file = self.docs_dir / self.pages[page_name]
-        
-        if not html_file.exists():
-            st.error(f"Documentation file not found: {html_file}")
-            return
-        
-        # Get absolute path
-        abs_path = html_file.absolute()
-        file_url = abs_path.as_uri()  # Converts to file:// URL correctly on all OS
-        
-        st.info(f"""
-            📖 **{page_name}**
-            
-            ✅ Click below to open in your browser:
-            
-            [{page_name}]({file_url})
-            
-            *Opening in a new tab provides the best experience with full formatting.*
-        """)
-    
-    def get_documentation_path(self, page_name: str) -> Path:
-        """Get path to a documentation page"""
-        if page_name not in self.pages:
-            raise ValueError(f"Unknown page: {page_name}")
-        return self.docs_dir / self.pages[page_name]
-    
-    def list_available_pages(self) -> dict:
-        """List all available documentation pages"""
-        available = {}
-        for name, filename in self.pages.items():
-            path = self.docs_dir / filename
-            if path.exists():
-                available[name] = str(path)
-        return available
-
-
-class DocumentationViewer:
-    """Alternative viewer using markdown conversion"""
-    
-    def __init__(self, docs_dir: str = "docs"):
-        """Initialize documentation viewer"""
-        self.docs_dir = Path(docs_dir)
-        self.md_files = {
+        self.markdown_pages = {
             "Quick Start": "QUICK_START.md",
             "Interpretation Guide": "INTERPRETATION_GUIDE.md",
             "Financial Glossary": "GLOSSARY.md",
+            "Documentation Hub": "HTML_DOCUMENTATION_SUITE_README.md",
         }
-    
-    def display_page(self, page_name: str):
-        """Display markdown page in Streamlit"""
-        if page_name not in self.md_files:
-            st.error(f"Unknown page: {page_name}")
+        self.page_meta = {
+            "Quick Start": {
+                "label": "Quick Start",
+                "summary": "Get oriented fast and start using the app with confidence.",
+                "audience": "Best for first-time users",
+                "cta": "Read Quick Start",
+            },
+            "Interpretation Guide": {
+                "label": "How to Read the Signals",
+                "summary": "Understand the tables, metrics, and what the signals are actually telling you.",
+                "audience": "Best for deeper analysis",
+                "cta": "Open Guide",
+            },
+            "Financial Glossary": {
+                "label": "Glossary",
+                "summary": "Look up investing and market terms without leaving the app.",
+                "audience": "Best for quick reference",
+                "cta": "Open Glossary",
+            },
+            "Documentation Hub": {
+                "label": "All Help",
+                "summary": "Browse everything and jump to the guide that matches what you are doing.",
+                "audience": "Best for browsing",
+                "cta": "Browse Help",
+            },
+        }
+
+    def get_documentation_path(self, page_name: str) -> Path:
+        if page_name not in self.pages:
+            raise ValueError(f"Unknown page: {page_name}")
+        return self.docs_dir / self.pages[page_name]
+
+    def get_markdown_path(self, page_name: str) -> Path:
+        if page_name not in self.markdown_pages:
+            raise ValueError(f"Unknown page: {page_name}")
+        return self.docs_dir / self.markdown_pages[page_name]
+
+    def render_page(self, page_name: str) -> None:
+        """Render the markdown documentation page natively in Streamlit."""
+        markdown_file = self.get_markdown_path(page_name)
+        if not markdown_file.exists():
+            st.error(f"Documentation file not found: {markdown_file}")
             return
-        
-        md_file = self.docs_dir / self.md_files[page_name]
-        
-        if not md_file.exists():
-            st.error(f"Documentation file not found: {md_file}")
-            return
-        
-        try:
-            with open(md_file, "r", encoding="utf-8") as f:
-                content = f.read()
-            
-            st.markdown(content)
-            
-        except Exception as e:
-            st.error(f"Error loading documentation: {str(e)}")
-    
-    def display_all_pages(self):
-        """Display all documentation pages in tabs"""
-        tabs = st.tabs(list(self.md_files.keys()))
-        
-        for tab, page_name in zip(tabs, self.md_files.keys()):
-            with tab:
-                self.display_page(page_name)
 
+        st.markdown(markdown_file.read_text(encoding="utf-8"))
 
-# ============================================================================
-# QUICK START - Usage Examples
-# ============================================================================
+    def render_actions(self, page_name: str) -> None:
+        """Provide reliable file actions instead of fragile file:// links."""
+        html_file = self.get_documentation_path(page_name)
+        markdown_file = self.get_markdown_path(page_name)
 
-def example_1_add_sidebar_help():
-    """Example 1: Add help navigation to sidebar"""
-    docs = DocumentationHelper()
-    docs.add_sidebar_navigation()
+        if html_file.exists():
+            st.download_button(
+                "Download HTML",
+                data=html_file.read_text(encoding="utf-8"),
+                file_name=html_file.name,
+                mime="text/html",
+                use_container_width=True,
+                key=f"download_html_{page_name}",
+            )
 
+        if markdown_file.exists():
+            st.download_button(
+                "Download Markdown",
+                data=markdown_file.read_text(encoding="utf-8"),
+                file_name=markdown_file.name,
+                mime="text/markdown",
+                use_container_width=True,
+                key=f"download_md_{page_name}",
+            )
 
-def example_2_add_help_page():
-    """Example 2: Create dedicated Help page"""
-    # In your main app, add this to page routing:
-    # if selected_page == "Help":
-    #     docs = DocumentationHelper()
-    #     docs.add_main_help_page()
-    pass
+        st.caption(f"Local HTML file: {html_file}")
 
+    def _set_selected_page(self, page_name: str) -> None:
+        st.session_state["help_selected_page"] = page_name
 
-def example_3_open_help_in_browser():
-    """Example 3: Simple button to open help"""
-    docs = DocumentationHelper()
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("Quick Start"):
-            docs.open_help_page("Quick Start")
-    
-    with col2:
-        if st.button("Interpretation Guide"):
-            docs.open_help_page("Interpretation Guide")
-    
-    with col3:
-        if st.button("Glossary"):
-            docs.open_help_page("Financial Glossary")
+    def _render_guide_cards(self, selected_page: str) -> str:
+        page_names = list(self.pages.keys())
+        columns = st.columns(len(page_names))
 
+        for column, page_name in zip(columns, page_names):
+            meta = self.page_meta[page_name]
+            is_selected = page_name == selected_page
+            title = meta["label"]
+            if is_selected:
+                title = f"{title} *"
 
-def example_4_markdown_viewer():
-    """Example 4: Display markdown docs inline"""
-    viewer = DocumentationViewer()
-    
-    page = st.sidebar.radio(
-        "Documentation",
-        ["Quick Start", "Interpretation Guide", "Financial Glossary"]
-    )
-    
-    viewer.display_page(page)
+            with column:
+                st.markdown(f"**{title}**")
+                st.caption(meta["audience"])
+                st.write(meta["summary"])
+                if st.button(meta["cta"], key=f"help_card_{page_name}", use_container_width=True):
+                    self._set_selected_page(page_name)
+                    st.rerun()
 
+        return st.session_state.get("help_selected_page", selected_page)
 
-# ============================================================================
-# INTEGRATION INTO streamlit_app.py
-# ============================================================================
+    def add_main_help_page(self, initial_page: str | None = None) -> None:
+        """Render the in-app help center."""
+        page_names = list(self.pages.keys())
+        default_index = page_names.index(initial_page) if initial_page in page_names else 0
+        if "help_selected_page" not in st.session_state:
+            st.session_state["help_selected_page"] = page_names[default_index]
 
-"""
-To integrate into your streamlit_app.py:
+        st.title("Help Center")
+        st.write("Pick the guide that matches your task, then read it right here in the app.")
 
-1. Import at the top:
-   from docs.html_integration import DocumentationHelper
+        quick_col, detail_col = st.columns([1.1, 1.9])
+        with quick_col:
+            st.info(
+                "New to the app: start with Quick Start.\n\n"
+                "Want to understand a metric or signal: open How to Read the Signals.\n\n"
+                "Need a term explained: use the Glossary."
+            )
+        with detail_col:
+            st.caption("Suggested path")
+            st.write("Quick Start -> How to Read the Signals -> Glossary when needed")
 
-2. Add to sidebar navigation:
-   docs = DocumentationHelper()
-   docs.add_sidebar_navigation()
+        selected_page = self._render_guide_cards(st.session_state["help_selected_page"])
+        selected_page = st.segmented_control(
+            "Select a guide",
+            page_names,
+            default=selected_page,
+            key="help_selected_page",
+        )
 
-3. OR add a Help page option:
-   
-   PAGES = {
-       "Start Here": start_here_view,
-       "Trend Analyzer": trend_analyzer_view,
-       # ... other views ...
-       "Help": "help"
-   }
-   
-   page_options = list(PAGES.keys())
-   selected_page = st.sidebar.selectbox("Select a page", page_options)
-   
-   if selected_page == "Help":
-       docs = DocumentationHelper()
-       docs.add_main_help_page()
-   else:
-       # Import and call your view functions
-       ...
+        source_path = self.get_documentation_path(selected_page)
+        markdown_path = self.get_markdown_path(selected_page)
+        meta = self.page_meta[selected_page]
 
-Example minimal integration:
+        info_col, action_col = st.columns([2.2, 1])
+        with info_col:
+            st.subheader(meta["label"])
+            st.write(meta["summary"])
+            st.caption(f"Source files: {source_path.name} and {markdown_path.name}")
+        with action_col:
+            self.render_actions(selected_page)
 
-    import streamlit as st
-    from docs.html_integration import DocumentationHelper
-    
-    st.set_page_config(page_title="52-Week High Tracker", layout="wide")
-    
-    docs = DocumentationHelper()  # Create once
-    
-    with st.sidebar:
-        st.title("52-Week High Tracker")
-        page = st.radio("Select View", [...your pages...])
-        docs.add_sidebar_navigation()  # Add help links
-    
-    # ... rest of your app ...
-"""
+        st.divider()
+        self.render_page(selected_page)
