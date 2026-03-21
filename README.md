@@ -71,8 +71,11 @@ The app will open at `http://localhost:8501`
 
 ## 📖 Documentation
 
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design and component overview
+- **[QUICK_START.md](docs/QUICK_START.md)** - First 5 minutes guide ⭐ **START HERE** 
+- **[INTERPRETATION_GUIDE.md](docs/INTERPRETATION_GUIDE.md)** - How to read tables, column meanings, big picture strategy
+- **[GLOSSARY.md](docs/GLOSSARY.md)** - Financial terms & metrics explained
 - **[WORKFLOWS.md](docs/WORKFLOWS.md)** - Detailed workflows for each view
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design and component overview
 - **[API_REFERENCE.md](docs/API_REFERENCE.md)** - Function documentation
 - **[SETUP.md](docs/SETUP.md)** - Installation and configuration guide
 

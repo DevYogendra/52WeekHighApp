@@ -474,3 +474,11 @@ with sqlite3.connect(DB_PATH) as conn:
 ---
 
 **Last Updated:** March 2026
+
+---
+
+## 📖 Related Documentation
+
+- **[INTERPRETATION_GUIDE.md](INTERPRETATION_GUIDE.md)** - How to read tables and understand investment strategy
+- **[WORKFLOWS.md](WORKFLOWS.md)** - Step-by-step workflows for each view
+- **[API_REFERENCE.md](API_REFERENCE.md)** - Complete function reference

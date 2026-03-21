@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Glossary - 52-Week High Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .glossary-entry {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .glossary-entry h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .term {
+            font-weight: bold;
+            color: var(--dark-text);
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .formula {
+            background: var(--light-bg);
+            padding: 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        .example {
+            background: var(--light-bg);
+            padding: 12px;
+            border-left: 3px solid var(--info-color);
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .example-title {
+            font-weight: bold;
+            color: var(--info-color);
+            margin-bottom: 5px;
+        }
+
+        .range-table {
+            width: 100%;
+            margin: 10px 0;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .range-table td {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .range-table tr:first-child td {
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        .good { color: var(--success-color); font-weight: bold; }
+        .warning { color: var(--warning-color); font-weight: bold; }
+        .bad { color: var(--danger-color); font-weight: bold; }
+
+        .search-box {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .search-button {
+            padding: 12px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .search-button:hover {
+            background: #0d47a1;
+        }
+
+        .strategy-card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .strategy-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+        }
+
+        .strategy-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .strategy-detail {
+            background: var(--light-bg);
+            padding: 12px;
+            border-radius: 4px;
+        }
+
+        .strategy-detail strong {
+            display: block;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .quick-ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95rem;
+        }
+
+        .quick-ref-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .quick-ref-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .quick-ref-table tr:hover {
+            background: var(--light-bg);
+        }
+
+        .metric-category {
+            background: linear-gradient(135deg, #e7f3ff 0%, #f0f8ff 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .metric-category h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .strategy-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📖 Financial Glossary</h1>
+            <p>Complete Reference Guide for All Terms & Metrics</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-breadcrumb">
+            <a href="index.html">← Back to Hub</a> | 
+            <a href="quick-start.html">Quick Start</a> |
+            <a href="interpretation-guide.html">Interpretation Guide</a>
+        </div>
+
+        <!-- Search -->
+        <div class="toc">
+            <div class="toc-title">📑 Sections</div>
+            <ul>
+                <li><a href="#52week">52-Week High Concepts</a></li>
+                <li><a href="#valuation">Valuation Metrics</a></li>
+                <li><a href="#quality">Quality Metrics</a></li>
+                <li><a href="#momentum">Momentum Indicators</a></li>
+                <li><a href="#balance">Balance Sheet Metrics</a></li>
+                <li><a href="#liquidity">Liquidity & Efficiency</a></li>
+                <li><a href="#strategies">5 Investment Strategies</a></li>
+                <li><a href="#quick-ref">Quick Reference Tables</a></li>
+            </ul>
+        </div>
+
+        <!-- 52-Week High Concepts -->
+        <div class="section" id="52week">
+            <h2 class="section-title">52-Week High Concepts</h2>
+
+            <div class="glossary-entry">
+                <h4>52-Week High (All-Time High, ATH)</h4>
+                <p class="term">Definition:</p>
+                <p>The highest price a stock has traded at during the past 52 weeks (one year).</p>
+                <p><strong>Significance:</strong> Stocks hitting new highs show the strongest business momentum and investor conviction. It's a powerful filtering criterion.</p>
+                <div class="example">
+                    <div class="example-title">Example:</div>
+                    <p>TCS' 52W high is ₹4,500. It's trading at ₹4,400 today (-0.2%). This is very near the high, showing strength.</p>
+                </div>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>% from 52W High</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">(Current Price - 52W High) / 52W High × 100</div>
+                <p><strong>What it means:</strong> How far below its peak the stock is currently trading. Negative number = discount from high.</p>
+                <table class="range-table">
+                    <tr>
+                        <td>Range</td>
+                        <td>Interpretation</td>
+                    </tr>
+                    <tr>
+                        <td>-0 to -3%</td>
+                        <td class="good">At peak, maximum strength, momentum fresh</td>
+                    </tr>
+                    <tr>
+                        <td>-3 to -10%</td>
+                        <td class="good">Near high, still strong, pullback starting</td>
+                    </tr>
+                    <tr>
+                        <td>-10 to -30%</td>
+                        <td>Pullback zone, value opportunity</td>
+                    </tr>
+                    <tr>
+                        <td>-50%+</td>
+                        <td class="bad">Deep value, requires research, risky</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>Momentum</h4>
+                <p class="term">Definition:</p>
+                <p>The tendency for a stock's price to continue moving in the same direction. Stocks that recently hit highs tend to continue up.</p>
+                <p><strong>In this app:</strong> Measured by Trend Score, Δ Hits, and frequency metrics.</p>
+                <p><strong>Why it matters:</strong> Momentum is a real market phenomenon. Stocks hitting new highs continue up 60-70% of the time for 4-12 weeks.</p>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>Δ Hits (Delta Hits)</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">Δ Hits = Number of highs this week - Number of highs last week</div>
+                <p><strong>What it means:</strong> Week-over-week change in high frequency. Shows if momentum is accelerating or decelerating.</p>
+                <table class="range-table">
+                    <tr>
+                        <td>Value</td>
+                        <td>Signal</td>
+                    </tr>
+                    <tr>
+                        <td>+3 or higher</td>
+                        <td class="good">Accelerating momentum, strong buy</td>
+                    </tr>
+                    <tr>
+                        <td>+1 to +2</td>
+                        <td class="good">Growing momentum, positive</td>
+                    </tr>
+                    <tr>
+                        <td>0 to -1</td>
+                        <td>Stable to slightly declining</td>
+                    </tr>
+                    <tr>
+                        <td>-2 or lower</td>
+                        <td class="bad">Decelerating momentum, caution</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>Trend Score</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">Trend Score = (Hits in past 7 days × 3) + (Hits in past 30 days × 2) + (Hits in past 60 days × 1)</div>
+                <p><strong>What it measures:</strong> Composite momentum score emphasizing recent activity. Higher = stronger momentum.</p>
+                <p><strong>Why weighted this way:</strong> Recent highs are more important than old ones. 7-day activity gets 3x weight.</p>
+                <table class="range-table">
+                    <tr>
+                        <td>Score</td>
+                        <td>Momentum Strength</td>
+                    </tr>
+                    <tr>
+                        <td>100+</td>
+                        <td class="good">Very strong, stock on fire</td>
+                    </tr>
+                    <tr>
+                        <td>60-100</td>
+                        <td class="good">Strong, established trend</td>
+                    </tr>
+                    <tr>
+                        <td>30-60</td>
+                        <td>Moderate, emerging trend</td>
+                    </tr>
+                    <tr>
+                        <td>&lt;30</td>
+                        <td class="bad">Weak momentum</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Valuation Metrics -->
+        <div class="metric-category" id="valuation">
+            <h3>📊 Valuation Metrics - How Expensive Is It?</h3>
+            <p>Valuation metrics answer: "Is this stock overpriced or underpriced?" Lower usually means cheaper, but context matters.</p>
+
+            <div class="glossary-entry">
+                <h4>P/E Ratio (Price-to-Earnings)</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">P/E = Stock Price ÷ Earnings Per Share (EPS)</div>
+                <p><strong>What it means:</strong> How many years of current earnings you're paying for the stock.</p>
+                <div class="example">
+                    <div class="example-title">Example:</div>
+                    <p><strong>Stock A:</strong> Price ₹100, EPS ₹10 → P/E = 10 (paying 10 years of earnings)</p>
+                    <p><strong>Stock B:</strong> Price ₹100, EPS ₹2 → P/E = 50 (paying 50 years of earnings)</p>
+                    <p>Stock A looks cheaper (lower P/E), but A might be declining and B growing 40%/year. Context matters!</p>
+                </div>
+                <table class="range-table">
+                    <tr>
+                        <td>P/E Range</td>
+                        <td>Valuation Assessment</td>
+                    </tr>
+                    <tr>
+                        <td>&lt;10</td>
+                        <td class="good">Very Cheap</td>
+                    </tr>
+                    <tr>
+                        <td>10-15</td>
+                        <td class="good">Cheap to Fair</td>
+                    </tr>
+                    <tr>
+                        <td>15-25</td>
+                        <td>Fair to Expensive</td>
+                    </tr>
+                    <tr>
+                        <td>25-40</td>
+                        <td class="warning">Expensive (growth priced in)</td>
+                    </tr>
+                    <tr>
+                        <td>40+</td>
+                        <td class="bad">Very Expensive (high risk)</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>P/BV (Price-to-Book Value)</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">P/BV = Market Price ÷ Book Value Per Share</div>
+                <p><strong>What it means:</strong> How much you're paying for each rupee of assets (after subtracting liabilities).</p>
+                <p><strong>Who cares:</strong> Banks and asset-heavy companies (this matters). Tech companies (less important).</p>
+                <table class="range-table">
+                    <tr>
+                        <td>P/BV Range</td>
+                        <td>Meaning</td>
+                    </tr>
+                    <tr>
+                        <td>&lt;1.0</td>
+                        <td class="good">Trading below book value (distressed or cheap)</td>
+                    </tr>
+                    <tr>
+                        <td>1.0-2.0</td>
+                        <td>Fair value for assets</td>
+                    </tr>
+                    <tr>
+                        <td>2.0-4.0</td>
+                        <td>Premium for quality/growth</td>
+                    </tr>
+                    <tr>
+                        <td>4.0+</td>
+                        <td class="warning">Very expensive (growth priced in heavy)</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>PEG Ratio (Price-to-Earnings Growth)</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">PEG = P/E Ratio ÷ Expected Annual Earnings Growth Rate (%)</div>
+                <p><strong>What it means:</strong> P/E adjusted for growth rate. "Is this expensive for the growth I'm getting?"</p>
+                <div class="example">
+                    <div class="example-title">Example:</div>
+                    <p><strong>Stock A:</strong> P/E 20, expected growth 20% → PEG 1.0 (FAIR VALUE)</p>
+                    <p><strong>Stock B:</strong> P/E 20, expected growth 10% → PEG 2.0 (EXPENSIVE)</p>
+                    <p>Same P/E, but Stock B is more expensive because growth is slower.</p>
+                </div>
+                <table class="range-table">
+                    <tr>
+                        <td>PEG Value</td>
+                        <td>Assessment</td>
+                    </tr>
+                    <tr>
+                        <td>&lt;0.8</td>
+                        <td class="good">Excellent value for growth</td>
+                    </tr>
+                    <tr>
+                        <td>0.8-1.2</td>
+                        <td class="good">Fair value for growth</td>
+                    </tr>
+                    <tr>
+                        <td>1.2-1.8</td>
+                        <td>Slightly expensive</td>
+                    </tr>
+                    <tr>
+                        <td>1.8+</td>
+                        <td class="bad">Expensive for growth</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>Earnings Yield</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">Earnings Yield = (1 ÷ P/E Ratio) × 100%</div>
+                <p><strong>What it means:</strong> Inverse of P/E. Annual return you'd get if all earnings went to you. Compare to FD rate!</p>
+                <div class="example">
+                    <div class="example-title">Example:</div>
+                    <p>Stock with P/E 20 → Earnings Yield 5%</p>
+                    <p>Compare: Bank FD rate is 6-7%. Is 5% return worth the risk? Think about it.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Metrics -->
+        <div class="metric-category" id="quality">
+            <h3>💪 Quality Metrics - How Good Is The Business?</h3>
+            <p>Quality metrics measure profitability and efficiency. Higher ROE = better quality company.</p>
+
+            <div class="glossary-entry">
+                <h4>ROE % (Return on Equity)</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">ROE = (Net Income ÷ Shareholders' Equity) × 100%</div>
+                <p><strong>What it means:</strong> How much profit the company generates per rupee of shareholder money invested.</p>
+                <p><strong>Why it matters:</strong> THE single most important quality metric. High ROE = efficient, profitable business.</p>
+                <div class="example">
+                    <div class="example-title">Example:</div>
+                    <p><strong>Company A:</strong> ₹100 shareholder equity, ₹20 annual profit → ROE 20% (excellent)</p>
+                    <p><strong>Company B:</strong> ₹100 shareholder equity, ₹5 annual profit → ROE 5% (poor)</p>
+                    <p>Company A is 4x more efficient at generating returns.</p>
+                </div>
+                <table class="range-table">
+                    <tr>
+                        <td>ROE %</td>
+                        <td>Quality Rating</td>
+                    </tr>
+                    <tr>
+                        <td>20%+</td>
+                        <td class="good">Exceptional (Moat, best-in-class)</td>
+                    </tr>
+                    <tr>
+                        <td>15-20%</td>
+                        <td class="good">Excellent (Very high quality)</td>
+                    </tr>
+                    <tr>
+                        <td>12-15%</td>
+                        <td class="good">Good (Solid company)</td>
+                    </tr>
+                    <tr>
+                        <td>8-12%</td>
+                        <td>Average (Acceptable)</td>
+                    </tr>
+                    <tr>
+                        <td>&lt;8%</td>
+                        <td class="bad">Poor (Low quality)</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>ROA % (Return on Assets)</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">ROA = (Net Income ÷ Total Assets) × 100%</div>
+                <p><strong>What it means:</strong> Profit generated per rupee of total assets. Shows asset efficiency.</p>
+                <p><strong>Similar to ROE but:**</strong> ROA measures efficiency of ALL assets. ROE measures efficiency for equity holders.</p>
+                <table class="range-table">
+                    <tr>
+                        <td>ROA %</td>
+                        <td>Assessment</td>
+                    </tr>
+                    <tr>
+                        <td>10%+</td>
+                        <td class="good">Excellent asset efficiency</td>
+                    </tr>
+                    <tr>
+                        <td>5-10%</td>
+                        <td class="good">Good asset efficiency</td>
+                    </tr>
+                    <tr>
+                        <td>2-5%</td>
+                        <td>Average asset efficiency</td>
+                    </tr>
+                    <tr>
+                        <td>&lt;2%</td>
+                        <td class="bad">Poor asset efficiency</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>OPM % (Operating Profit Margin)</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">OPM = (Operating Profit ÷ Total Sales) × 100%</div>
+                <p><strong>What it means:</strong> How much profit the company makes from core operations, before interest/taxes.</p>
+                <p><strong>Why it matters:</strong> Shows pricing power and operational efficiency. Higher = stronger competitive position.</p>
+                <table class="range-table">
+                    <tr>
+                        <td>OPM %</td>
+                        <td>Quality Rating</td>
+                    </tr>
+                    <tr>
+                        <td>15%+</td>
+                        <td class="good">Excellent (Strong pricing power)</td>
+                    </tr>
+                    <tr>
+                        <td>10-15%</td>
+                        <td class="good">Good</td>
+                    </tr>
+                    <tr>
+                        <td>5-10%</td>
+                        <td>Average</td>
+                    </tr>
+                    <tr>
+                        <td>&lt;5%</td>
+                        <td class="bad">Poor (Competitive pressure)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Momentum Indicators -->
+        <div class="metric-category" id="momentum">
+            <h3>📈 Momentum Indicators - Is Money Flowing In?</h3>
+
+            <div class="glossary-entry">
+                <h4>Δ Gain % (Delta Gain Percentage)</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">Δ Gain % = (Gain % this week - Gain % last week)</div>
+                <p><strong>What it means:</strong> Week-over-week change in the stock's year-to-date gain. Shows acceleration/deceleration in price momentum.</p>
+                <p><strong>Signal:</strong> Positive Δ Gain % = accelerating (good). Negative = decelerating (caution).</p>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>DII/FII Flows (Institutional Buying/Selling)</h4>
+                <p class="term">Components:</p>
+                <p><strong>DII:</strong> Domestic Institutional Investors (Indian mutual funds, insurance, pension funds)</p>
+                <p><strong>FII:</strong> Foreign Institutional Investors (foreign funds, foreign portfolio investors)</p>
+                <p><strong>What it means:</strong> Net buying or selling by smart money. Positive = buying. Negative = selling.</p>
+                <table class="range-table">
+                    <tr>
+                        <td>Flow Scenario</td>
+                        <td>Signal</td>
+                    </tr>
+                    <tr>
+                        <td>Both DII + FII positive</td>
+                        <td class="good">Very bullish: All smart money buying</td>
+                    </tr>
+                    <tr>
+                        <td>DII positive, FII neutral</td>
+                        <td>Positive: Domestic buying</td>
+                    </tr>
+                    <tr>
+                        <td>One positive, one negative</td>
+                        <td>Mixed: Unclear direction</td>
+                    </tr>
+                    <tr>
+                        <td>Both DII + FII negative</td>
+                        <td class="bad">Very bearish: Smart money exiting</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>Market Cap Change %</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">Δ% MCap = (This week's market cap - Last week's market cap) / Last week's market cap × 100</div>
+                <p><strong>What it means:</strong> Week-over-week change in total market value. Shows if money is flowing into company.</p>
+                <table class="range-table">
+                    <tr>
+                        <td>Δ MCap %</td>
+                        <td>Meaning</td>
+                    </tr>
+                    <tr>
+                        <td>+5%+</td>
+                        <td class="good">Strong money inflow</td>
+                    </tr>
+                    <tr>
+                        <td>+2% to +5%</td>
+                        <td>Healthy inflow</td>
+                    </tr>
+                    <tr>
+                        <td>-5%+</td>
+                        <td class="bad">Strong money outflow</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Balance Sheet Metrics -->
+        <div class="metric-category" id="balance">
+            <h3>⚖️ Balance Sheet Health - Is The Company Safe?</h3>
+
+            <div class="glossary-entry">
+                <h4>Debt-to-Equity Ratio (D/E)</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">D/E = Total Debt ÷ Total Equity</div>
+                <p><strong>What it means:</strong> How much the company borrows vs. owns. Higher D/E = more leveraged = riskier.</p>
+                <div class="example">
+                    <div class="example-title">Example:</div>
+                    <p><strong>Company A:</strong> ₹50 debt, ₹100 equity → D/E 0.5 (safe)</p>
+                    <p><strong>Company B:</strong> ₹200 debt, ₹100 equity → D/E 2.0 (risky, high leverage)</p>
+                    <p>Company A has safer balance sheet.</p>
+                </div>
+                <table class="range-table">
+                    <tr>
+                        <td>D/E Ratio</td>
+                        <td>Safety Assessment</td>
+                    </tr>
+                    <tr>
+                        <td>&lt;0.3</td>
+                        <td class="good">Very safe (low debt)</td>
+                    </tr>
+                    <tr>
+                        <td>0.3-0.7</td>
+                        <td class="good">Safe (healthy debt)</td>
+                    </tr>
+                    <tr>
+                        <td>0.7-1.0</td>
+                        <td>Moderate (acceptable)</td>
+                    </tr>
+                    <tr>
+                        <td>1.0-1.5</td>
+                        <td class="warning">High (risky)</td>
+                    </tr>
+                    <tr>
+                        <td>&gt;2.0</td>
+                        <td class="bad">Very high (dangerous)</td>
+                    </tr>
+                </table>
+                <p><span class="badge badge-success">Always check:</span> Before buying any stock, verify D/E &lt; 1.0. This single check saves you from leverage disasters.</p>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>Current Ratio (Liquidity)</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">Current Ratio = Current Assets ÷ Current Liabilities</div>
+                <p><strong>What it means:</strong> Can the company pay its bills in the next 12 months? Shows short-term financial health.</p>
+                <table class="range-table">
+                    <tr>
+                        <td>Current Ratio</td>
+                        <td>Assessment</td>
+                    </tr>
+                    <tr>
+                        <td>1.5+</td>
+                        <td class="good">Strong liquidity</td>
+                    </tr>
+                    <tr>
+                        <td>1.0-1.5</td>
+                        <td>Adequate liquidity</td>
+                    </tr>
+                    <tr>
+                        <td>&lt;1.0</td>
+                        <td class="bad">Weak liquidity (risky)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Liquidity & Efficiency -->
+        <div class="metric-category" id="liquidity">
+            <h3>💧 Liquidity & Efficiency Metrics</h3>
+
+            <div class="glossary-entry">
+                <h4>Inventory Turnover</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">Inventory Turnover = Cost of Goods Sold ÷ Average Inventory</div>
+                <p><strong>What it means:</strong> How many times per year the company sells and replaces inventory.</p>
+                <p><strong>Higher is better:</strong> Inventory moves fast → cash flow efficient → less stuck capital.</p>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>Receivables Turnover</h4>
+                <p class="term">What it means:</strong> How quickly the company converts sales into cash. Higher = faster cash collection.</p>
+                <p><strong>Red flag:</strong> Declining receivables turnover = customers delaying payments = cash flow deteriorating.</p>
+            </div>
+
+            <div class="glossary-entry">
+                <h4>Working Capital</h4>
+                <p class="term">Formula:</p>
+                <div class="formula">Working Capital = Current Assets - Current Liabilities</div>
+                <p><strong>What it means:</strong> Cash available to run day-to-day operations. Higher = better positioned.</p>
+                <p><strong>Red flag:</strong> Negative working capital = company struggles to pay short-term bills.</strong>
+            </div>
+        </div>
+
+        <!-- Investment Strategies -->
+        <div class="section" id="strategies">
+            <h2 class="section-title">5 Complete Investment Strategies</h2>
+
+            <div class="strategy-card">
+                <div class="strategy-title">1️⃣ Momentum Strategy</div>
+                <p><strong>Philosophy:</strong> Chase recent winners hitting new highs with accelerating gains and institutional buying.</p>
+                <p><strong>Time Horizon:</strong> 2-8 weeks (swing trades)</p>
+                <p><strong>Key Metrics to Monitor:</strong></p>
+                <div class="strategy-details">
+                    <div class="strategy-detail">
+                        <strong>Entry Signals</strong>
+                        <p>✓ Δ Hits +2 or higher<br>
+                           ✓ Trend Score 40-60<br>
+                           ✓ DII/FII positive</p>
+                    </div>
+                    <div class="strategy-detail">
+                        <strong>Exit Signals</strong>
+                        <p>✗ Δ Hits turns -2 or lower<br>
+                           ✗ Trend Score &gt;100 (overbought)<br>
+                           ✗ DII/FII both turn negative</p>
+                    </div>
+                </div>
+                <p><strong>Position Size:</strong> 1-2% per trade (higher risk)</p>
+                <p><strong>Risk Management:</strong> Stop loss at -10% of entry price. Use tight stops because momentum can reverse quickly.</p>
+            </div>
+
+            <div class="strategy-card">
+                <div class="strategy-title">2️⃣ Quality Growth Strategy</div>
+                <p><strong>Philosophy:</strong> Find companies with strong fundamentals (ROE 15%+, low debt) hitting new highs = double winners.</p>
+                <p><strong>Time Horizon:</strong> 6-24 months (buy & hold)</p>
+                <p><strong>Key Metrics to Screen:</strong></p>
+                <div class="strategy-details">
+                    <div class="strategy-detail">
+                        <strong>Buying Criteria</strong>
+                        <p>✓ ROE 15%+<br>
+                           ✓ D/E &lt; 0.7<br>
+                           ✓ P/E 12-25<br>
+                           ✓ Trend Score 30+</p>
+                    </div>
+                    <div class="strategy-detail">
+                        <strong>Hold/Sell Triggers</strong>
+                        <p>Sell if: ROE drops 5%+ or D/E climbs &gt;1.0 or P/E jumps &gt;40</p>
+                    </div>
+                </div>
+                <p><strong>Position Size:</strong> 2-3% per stock (lower risk, best for wealth building)</p>
+                <p><strong>Why it works:</strong> ROE 15%+ compounds to 10x wealth over 10 years. Quality at discounts creates outsized returns.</p>
+            </div>
+
+            <div class="strategy-card">
+                <div class="strategy-title">3️⃣ Value + Momentum Hybrid</div>
+                <p><strong>Philosophy:</strong> Combine momentum signals with quality checks = find winners that are also financially healthy.</p>
+                <p><strong>Time Horizon:</strong> 3-12 months (medium-term)</p>
+                <p><strong>The Setup:</strong></p>
+                <div class="strategy-details">
+                    <div class="strategy-detail">
+                        <strong>Find</strong>
+                        <p>Stock with ROE 12%+, D/E &lt;0.8 showing positive Δ Hits</p>
+                    </div>
+                    <div class="strategy-detail">
+                        <strong>Buy When</strong>
+                        <p>Pullback + momentum returns = best risk/reward ratio</p>
+                    </div>
+                </div>
+                <p><strong>Position Size:</strong> 2-3% per stock</p>
+                <p><strong>Best Risk/Reward:</strong> Downside protected by quality, upside captured by momentum.</p>
+            </div>
+
+            <div class="strategy-card">
+                <div class="strategy-title">4️⃣ Deep Value Contrarian</div>
+                <p><strong>Philosophy:</strong> Find severely beaten-down companies (50%+ off highs) with decent fundamentals that will bounce back.</p>
+                <p><strong>Time Horizon:</strong> 2-5 years (patient capital required)</p>
+                <p><strong>Critical Criteria:</strong></p>
+                <div class="strategy-details">
+                    <div class="strategy-detail">
+                        <strong>Entry Requirements</strong>
+                        <p>✓ 50-70% below 52-week high<br>
+                           ✓ ROE still 8%+<br>
+                           ✓ D/E &lt; 1.5<br>
+                           ✓ Thesis confirmed</p>
+                    </div>
+                    <div class="strategy-detail">
+                        <strong>Avoid</strong>
+                        <p>✗ Negative ROE<br>
+                           ✗ D/E &gt; 2.0<br>
+                           ✗ No clear recovery story</p>
+                    </div>
+                </div>
+                <p><strong>Position Size:</strong> 0.2-0.5% max per stock (high risk). Scale in on further lows.</p>
+                <p><strong>Exit Strategy:</strong> Take 25-50% profits on first bounce, hold rest for 3+ years for 5-10x returns.</p>
+            </div>
+
+            <div class="strategy-card">
+                <div class="strategy-title">5️⃣ Sector Rotation</div>
+                <p><strong>Philosophy:</strong> Follow sector trends. Rotate portfolio capital into hot sectors, out of cold ones.</p>
+                <p><strong>Time Horizon:</strong> 4-week rebalancing cycles (tactical)</p>
+                <p><strong>The System:</strong></p>
+                <div class="strategy-details">
+                    <div class="strategy-detail">
+                        <strong>Weekly Check</strong>
+                        <p>View 10: Which sectors have 10+ new highs? THOSE are hot.</p>
+                    </div>
+                    <div class="strategy-detail">
+                        <strong>Action</strong>
+                        <p>30-50% portfolio in hot sector stocks. Rebalance monthly.</p>
+                    </div>
+                </div>
+                <p><strong>Position Size:</strong> 2-5% per stock, 30-50% per hot sector</p>
+                <p><strong>Why it works:</strong> Sector momentum is structural. IT in bull = 40% portfolio in INFY/TCS. Auto in bear = near 0%.</p>
+            </div>
+        </div>
+
+        <!-- Quick Reference Tables -->
+        <div class="section" id="quick-ref">
+            <h2 class="section-title">Quick Reference Tables</h2>
+
+            <div class="subsection-title">Metric Interpretation at a Glance</div>
+            <table class="quick-ref-table">
+                <tr>
+                    <th>Metric</th>
+                    <th>Excellent</th>
+                    <th>Good</th>
+                    <th>Average</th>
+                    <th>Poor</th>
+                </tr>
+                <tr>
+                    <td><strong>P/E</strong></td>
+                    <td>&lt;10</td>
+                    <td>10-15</td>
+                    <td>15-25</td>
+                    <td>&gt;40</td>
+                </tr>
+                <tr>
+                    <td><strong>ROE %</strong></td>
+                    <td>20%+</td>
+                    <td>15-20%</td>
+                    <td>12-15%</td>
+                    <td>&lt;8%</td>
+                </tr>
+                <tr>
+                    <td><strong>D/E</strong></td>
+                    <td>&lt;0.3</td>
+                    <td>0.3-0.7</td>
+                    <td>0.7-1.0</td>
+                    <td>&gt;2.0</td>
+                </tr>
+                <tr>
+                    <td><strong>OPM %</strong></td>
+                    <td>15%+</td>
+                    <td>10-15%</td>
+                    <td>5-10%</td>
+                    <td>&lt;5%</td>
+                </tr>
+                <tr>
+                    <td><strong>Trend Score</strong></td>
+                    <td>100+</td>
+                    <td>60-100</td>
+                    <td>30-60</td>
+                    <td>&lt;30</td>
+                </tr>
+                <tr>
+                    <td><strong>Δ Hits</strong></td>
+                    <td>+3+</td>
+                    <td>+1-2</td>
+                    <td>0-1</td>
+                    <td>-2 or lower</td>
+                </tr>
+            </table>
+
+            <div class="subsection-title" style="margin-top: 30px;">Investment Decision Matrix</div>
+            <table class="quick-ref-table">
+                <tr>
+                    <th>Scenario</th>
+                    <th>Signal</th>
+                    <th>Action</th>
+                </tr>
+                <tr>
+                    <td><strong>New high + ROE 15%+ + D/E &lt;0.7</strong></td>
+                    <td style="color: green; font-weight: bold;">STRONG BUY</td>
+                    <td>Buy 2-3% position, hold 6-24 months</td>
+                </tr>
+                <tr>
+                    <td><strong>Δ Hits +3 + Trend Score 40-60</strong></td>
+                    <td style="color: green; font-weight: bold;">BUY (Swing)</td>
+                    <td>1-2% position, exit when Δ becomes negative</td>
+                </tr>
+                <tr>
+                    <td><strong>Pullback -20% + ROE 12% + Δ Hits positive</strong></td>
+                    <td style="color: green; font-weight: bold;">VALUE OPPORTUNITY</td>
+                    <td>2-3% position, wait for bounce back</td>
+                </tr>
+                <tr>
+                    <td><strong>50% below high + ROE 8%+ + thesis confirmed</strong></td>
+                    <td>CONTRARIAN</td>
+                    <td>0.3-0.5% position, scale in lower</td>
+                </tr>
+                <tr>
+                    <td><strong>Δ Hits -3 or Trend Score &lt;20</strong></td>
+                    <td style="color: red; font-weight: bold;">SELL SIGNAL</td>
+                    <td>Exit position, momentum dead</td>
+                </tr>
+                <tr>
+                    <td><strong>P/E &lt;2 or ROE negative or D/E &gt;2</strong></td>
+                    <td style="color: red; font-weight: bold;">DANGER</td>
+                    <td>SKIP, broken company</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Closing -->
+        <div class="section" style="background: linear-gradient(135deg, #f0f8ff 0%, #e7f3ff 100%); padding: 30px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+            <h2 style="color: var(--primary-color); margin-bottom: 20px;">✅ You Now Have Complete Reference</h2>
+            <p>You have definitions, formulas, interpretations, and ranges for:</p>
+            <ul style="columns: 2;">
+                <li>All momentum metrics</li>
+                <li>All valuation metrics</li>
+                <li>All quality metrics</li>
+                <li>All balance sheet metrics</li>
+                <li>5 complete investment strategies</li>
+                <li>Quick reference tables</li>
+            </ul>
+            <p style="margin-top: 20px;"><strong>Use this glossary as:</strong> A reference whenever you see an unfamiliar metric in the app. Save this page or print it for quick lookup while analyzing stocks.</p>
+            <p><strong>Next step:</strong> Apply these terms and strategies to real data in the app. Your first trade teaches more than reading.</p>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>52-Week High Tracker | Financial Glossary | Last Updated: March 2026</p>
+        <p style="margin-top: 10px;"><a href="index.html">Back to Documentation Hub</a> | <a href="interpretation-guide.html">Interpretation Guide</a> | <a href="quick-start.html">Quick Start</a></p>
+    </footer>
+
+</body>
+</html>

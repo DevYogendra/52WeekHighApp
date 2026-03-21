@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interpretation Guide - 52-Week High Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .metric-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .metric-name {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .metric-formula {
+            background: var(--light-bg);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        .good-range {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .bad-range {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .warning-range {
+            color: var(--warning-color);
+            font-weight: 600;
+        }
+
+        .view-card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .view-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .view-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .view-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--dark-text);
+            margin-bottom: 10px;
+        }
+
+        .view-purpose {
+            background: var(--light-bg);
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .workflow-card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .workflow-header {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .timeline {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .timeline-item {
+            flex: 1;
+            min-width: 150px;
+            background: var(--light-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            text-align: center;
+        }
+
+        .timeline-label {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        .timeline-value {
+            font-size: 1.1rem;
+            margin-top: 5px;
+        }
+
+        .big-picture-box {
+            background: linear-gradient(135deg, #e7f3ff 0%, #f0f8ff 100%);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .principle {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .principle-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔍 Interpretation Guide</h1>
+            <p>Understanding the Investment Philosophy & Every Metric</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-breadcrumb">
+            <a href="index.html">← Back to Hub</a> | 
+            <a href="quick-start.html">Quick Start</a> |
+            <a href="glossary.html">Glossary →</a>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <div class="toc-title">📑 On This Page</div>
+            <ul>
+                <li><a href="#big-picture">The Big Picture: Why 52-Week Highs Work</a></li>
+                <li><a href="#essential-columns">Essential Columns to Understand</a></li>
+                <li><a href="#valuation">Valuation Columns Deep Dive</a></li>
+                <li><a href="#quality">Quality Metrics Deep Dive</a></li>
+                <li><a href="#momentum">Momentum Indicators Deep Dive</a></li>
+                <li><a href="#balance-sheet">Balance Sheet Health</a></li>
+                <li><a href="#all-views">All 11 Views Explained</a></li>
+                <li><a href="#workflows">5 Complete Investment Workflows</a></li>
+                <li><a href="#red-green">Red Flags & Green Flags</a></li>
+            </ul>
+        </div>
+
+        <!-- The Big Picture -->
+        <div class="section" id="big-picture">
+            <h2 class="section-title">The Big Picture: Why 52-Week Highs Work</h2>
+            
+            <div class="big-picture-box">
+                <h3 style="color: var(--primary-color); margin-bottom: 15px;">Three Core Principles</h3>
+
+                <div class="principle">
+                    <span class="principle-number">1</span>
+                    <strong>Momentum is Real:</strong> Stocks hitting new 52-week highs have the strongest recent earnings surprises, insider buying, institutional accumulation, and positive sentiment. They're fundamentally stronger than the broader market.
+                </div>
+
+                <div class="principle">
+                    <span class="principle-number">2</span>
+                    <strong>Trends Persist (Short-Term):</strong> A stock that just hit a new high is likely to show continued strength for 3-12 weeks as the trend plays out. The forces that got it there (earnings growth, industry tailwinds, etc.) don't disappear overnight.
+                </div>
+
+                <div class="principle">
+                    <span class="principle-number">3</span>
+                    <strong>Quality Compounds:</strong> The best new highs come from companies with high ROE, low debt, and growing earnings. These compounds over years. A new high + good quality scores = best risk/reward profile for long-term wealth building.
+                </div>
+            </div>
+
+            <p><strong>Why this matters for YOU:</strong> Instead of analyzing 5,000 stocks, you focus on the ~50-100 hitting new highs this week. Pre-filtered by momentum. Then add quality checks. This is how you find 10-baggers before they become famous.</p>
+
+            <div class="callout callout-success">
+                <strong>Historical Truth:</strong> Most +5x gains came from stocks that started by hitting new 52-week highs. This is not theory; it's pattern recognition from thousands of trades. When new highs + quality metrics align, wealth is created.
+            </div>
+        </div>
+
+        <!-- Essential Columns -->
+        <div class="section" id="essential-columns">
+            <h2 class="section-title">Essential Columns to Understand First</h2>
+            <p>These 8 columns make 80% of your investment decision. Master these first:</p>
+
+            <div class="metric-card">
+                <div class="metric-name">💰 Price</div>
+                <p>Current stock trading price.</p>
+                <p><strong>Use:</strong> Affects position sizing and psychological comfort. A ₹20 stock vs ₹500 stock doesn't change the analysis, but position sizing does (you can buy 50 shares vs 2 shares for same capital).</p>
+                <p><span class="good-range">✓ Good:</span> Any price point. Pick position size accordingly.</p>
+                <p><span class="bad-range">✗ Bad:</span> None inherently. But very high prices (&gt;₹10,000) are rare and often mature companies.</p>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📊 % from 52W High</div>
+                <p>How close the stock is to its 52-week peak, expressed as percentage discount.</p>
+                <div class="metric-formula">% from High = (Current Price - 52W High) / 52W High × 100</div>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">-0% to -3%:</span> At peak, maximum strength, but also highest risk of pullback</li>
+                    <li><span class="good-range">-3% to -10%:</span> Near high, still strong momentum, safer entry than at peak</li>
+                    <li><span class="warning-range">-10% to -30%:</span> Pullback zone, balanced entry, good for quality-focused buyers</li>
+                    <li><span class="warning-range">-30% to -50%:</span> Deep pullback, good for value hunters, needs careful quality check</li>
+                    <li><span class="bad-range">-50%+:</span> Very deep discount, either recovery play or company in trouble (RESEARCH THOROUGHLY)</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📈 Trend Score</div>
+                <p>Composite momentum indicator combining hit frequency at different time horizons.</p>
+                <div class="metric-formula">Trend Score = (Hits past 7d × 3) + (Hits past 30d × 2) + (Hits past 60d × 1)</div>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">100+:</span> Strong momentum, stock is on fire, highest visibility</li>
+                    <li><span class="good-range">60-100:</span> Solid momentum, established trend, safe entry</li>
+                    <li><span class="warning-range">30-60:</span> Moderate momentum, emerging trend, building</li>
+                    <li><span class="bad-range">&lt;30:</span> Weak momentum, trending but not strong</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📉 Δ Hits (Delta Hits)</div>
+                <p>Change in number of new 52-week highs from one week to the next. Shows if momentum is accelerating or decelerating.</p>
+                <div class="metric-formula">Δ Hits = Hits this week - Hits last week</div>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">+3 or higher:</span> Accelerating momentum, STRONG BUY SIGNAL</li>
+                    <li><span class="good-range">+1 to +3:</span> Growing momentum, positive but not explosive</li>
+                    <li><span class="warning-range">0 to -1:</span> Stable or slightly declining, still okay but watch carefully</li>
+                    <li><span class="bad-range">-2 or lower:</span> Momentum collapsing, SELL SIGNAL or stay out</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">💚 % Gain from Low</div>
+                <p>Percentage gain from the 52-week low. Shows total upside captured so far.</p>
+                <div class="metric-formula">% Gain = (Current Price - 52W Low) / 52W Low × 100</div>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">0-50%:</span> Early stage move, plenty of runway ahead</li>
+                    <li><span class="good-range">50-150%:</span> Middle stage move, still healthy, established trend</li>
+                    <li><span class="warning-range">150-300%:</span> Late stage move, large move already captured, pullback risk</li>
+                    <li><span class="bad-range">300%+:</span> Very extended, likely overextended, high pullback risk</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📊 Δ Gain % (Delta Gain)</div>
+                <p>Change in gain percentage from one week to previous week. Shows if the stock is accelerating or decelerating in gains.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">Positive (higher each week):</span> Acceleration, momentum building, STRONG</li>
+                    <li><span class="warning-range">Flat (similar week-to-week):</span> Momentum stable, healthy</li>
+                    <li><span class="bad-range">Negative (declining week-to-week):</span> Deceleration, momentum fading, CAUTION</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">⏰ Days to Hit High</div>
+                <p>How many days since the stock last hit a 52-week high. Shows recent activity.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">0-7 days:</span> Very recently hit high, momentum very fresh, maximum strength</li>
+                    <li><span class="good-range">7-30 days:</span> Hit high recently, momentum established but cooling</li>
+                    <li><span class="warning-range">30+ days:</span> Hit high a while ago, trend might be aging</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📊 Frequency Timeline (7D, 30D, 60D)</div>
+                <p>Number of times stock hit 52-week high in 7-day, 30-day, and 60-day windows.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">Increasing trend (7D &lt; 30D &lt; 60D):</span> Momentum building over 2 months, STRONG</li>
+                    <li><span class="warning-range">Flat (similar across all windows):</span> Consistent hitter, reliable but familiar</li>
+                    <li><span class="bad-range">Decreasing trend (7D &gt; 30D &gt; 60D):</span> Momentum declining, been hotter in past, might be peak</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Valuation Columns -->
+        <div class="section" id="valuation">
+            <h2 class="section-title">Valuation Columns Deep Dive</h2>
+            <p>How expensive is the stock relative to its earnings? These three work together:</p>
+
+            <div class="metric-card">
+                <div class="metric-name">💵 P/E Ratio</div>
+                <p>Price-to-Earnings. How many years of current earnings you're paying for the stock.</p>
+                <div class="metric-formula">P/E = Stock Price / Earnings Per Share</div>
+                <p><strong>Example:</strong> Stock price ₹100, EPS ₹5 → P/E = 20. You're paying 20 years of earnings.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">5-10:</span> Very cheap, often old economy companies or recovery plays</li>
+                    <li><span class="good-range">10-15:</span> Cheap to fair value, quality companies trading at discounts</li>
+                    <li><span class="good-range">15-25:</span> Fair to slightly expensive, typical for growing companies</li>
+                    <li><span class="warning-range">25-40:</span> Expensive, market expects significant growth</li>
+                    <li><span class="bad-range">40+:</span> Very expensive, a lot of hope priced in, higher risk</li>
+                    <li><span class="bad-range">&lt;2:</span> Either broken or too cheap to be true, RESEARCH</li>
+                </ul>
+                <p><span class="badge badge-info">Remember:</span> Lower P/E isn't always better. A company with P/E 8 and declining earnings is risky. P/E 25 with 40% earnings growth is safe.</p>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📚 P/BV (Price-to-Book Value)</div>
+                <p>Price relative to book value (assets - liabilities). How much you're paying per rupee of asset backing.</p>
+                <div class="metric-formula">P/BV = Market Price / Book Value Per Share</div>
+                <p><strong>Example:</strong> A bank with plenty of assets might have P/BV 1.2. A tech company with few assets might have P/BV 10.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">&lt;1.0:</span> Cheap to book value, often distressed or cyclical low</li>
+                    <li><span class="good-range">1.0-2.0:</span> Fair value, typical for stable companies</li>
+                    <li><span class="good-range">2.0-4.0:</span> Premium to book, usually for quality companies</li>
+                    <li><span class="warning-range">4.0+:</span> Very expensive to book, high growth expectations built in</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📈 PEG Ratio</div>
+                <p>Price/Earnings-to-Growth. P/E adjusted for growth. The fairness metric.</p>
+                <div class="metric-formula">PEG = P/E Ratio / Expected Annual Earnings Growth Rate (%)</div>
+                <p><strong>Example:</strong> P/E 30, expected growth 30% → PEG = 1.0 (fairly valued for growth). P/E 30, expected growth 10% → PEG = 3.0 (expensive for growth).</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">&lt;1.0:</span> Cheap relative to growth, excellent value</li>
+                    <li><span class="good-range">1.0-1.5:</span> Fair value for growth, sweet spot</li>
+                    <li><span class="warning-range">1.5-2.0:</span> Slightly expensive for growth</li>
+                    <li><span class="bad-range">2.0+:</span> Expensive relative to growth, risky</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📊 Earnings Yield</div>
+                <p>Inverse of P/E. What % annual return you'd get if all earnings went to you.</p>
+                <div class="metric-formula">Earnings Yield = 1 / P/E × 100%</div>
+                <p><strong>Example:</strong> P/E 20 → Earnings Yield 5%. Compare this to FD rate (6-7%) for context.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">8%+:</span> High earnings yield, very attractive, cheap</li>
+                    <li><span class="good-range">5-8%:</span> Good earnings yield, fair value</li>
+                    <li><span class="warning-range">3-5%:</span> Low earnings yield, expensive</li>
+                    <li><span class="bad-range">&lt;3%:</span> Very low earnings yield, risky unless super growth story</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quality Columns -->
+        <div class="section" id="quality">
+            <h2 class="section-title">Quality Metrics Deep Dive</h2>
+            <p>How good is the business? These metrics show profitability and efficiency:</p>
+
+            <div class="metric-card">
+                <div class="metric-name">💪 ROE % (Return on Equity)</div>
+                <p>Profit generated per rupee of shareholder equity. THE most important quality metric.</p>
+                <div class="metric-formula">ROE = Net Income / Shareholders Equity × 100%</div>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">20%+:</span> Exceptional quality, best-in-class, exceptional businesses</li>
+                    <li><span class="good-range">15-20%:</span> Very good quality, excellent companies</li>
+                    <li><span class="good-range">12-15%:</span> Good quality, solid companies</li>
+                    <li><span class="warning-range">8-12%:</span> Average quality, acceptable but not special</li>
+                    <li><span class="bad-range">&lt;8%:</span> Poor quality, company barely making returns beyond risk-free rate</li>
+                    <li><span class="bad-range">&lt;0%:</span> Losing money, stay away</li>
+                </ul>
+                <p><span class="badge badge-success">Pro Tip:</span> ROE 15%+ combined with new 52W high is your holy grail signal. High ROE + momentum = wealth building.</p>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📊 ROA % (Return on Assets)</div>
+                <p>Profit per rupee of total assets. Shows how efficiently company uses everything it owns.</p>
+                <div class="metric-formula">ROA = Net Income / Total Assets × 100%</div>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">10%+:</span> Excellent asset efficiency</li>
+                    <li><span class="good-range">5-10%:</span> Good asset efficiency</li>
+                    <li><span class="warning-range">2-5%:</span> Average asset efficiency</li>
+                    <li><span class="bad-range">&lt;2%:</span> Poor asset efficiency</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">💰 OPM % (Operating Profit Margin)</div>
+                <p>What profit % the company makes from operations, before interest/taxes. Operating efficiency.</p>
+                <div class="metric-formula">OPM = Operating Profit / Sales × 100%</div>
+                <p><strong>Interpretation (varies by industry):</strong></p>
+                <ul>
+                    <li><span class="good-range">15%+:</span> Excellent, high-quality business, pricing power</li>
+                    <li><span class="good-range">10-15%:</span> Good profitability</li>
+                    <li><span class="good-range">5-10%:</span> Average profitability</li>
+                    <li><span class="warning-range">&lt;5%:</span> Low profitability, risky, competitive</li>
+                    <li><span class="bad-range">&lt;0%:</span> Loss-making operations, stay away</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📈 Net Profit Margin</div>
+                <p>Final profit after all expenses, as % of sales.</p>
+                <div class="metric-formula">NPM = Net Income / Sales × 100%</div>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">15%+:</span> Exceptional profitability</li>
+                    <li><span class="good-range">10-15%:</span> Very good profitability</li>
+                    <li><span class="good-range">5-10%:</span> Good profitability</li>
+                    <li><span class="warning-range">3-5%:</span> Average profitability</li>
+                    <li><span class="bad-range">&lt;3%:</span> Low profitability</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Momentum Columns -->
+        <div class="section" id="momentum">
+            <h2 class="section-title">Momentum Indicators Deep Dive</h2>
+
+            <div class="metric-card">
+                <div class="metric-name">📈 Market Cap Change %</div>
+                <p>Δ % MCap. Week-over-week change in market capitalization. Shows if money is flowing in.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">+5%+:</span> Strong money inflow, BULLISH</li>
+                    <li><span class="good-range">+2% to +5%:</span> Healthy money inflow, positive</li>
+                    <li><span class="warning-range">-2% to +2%:</span> Stable, no strong direction</li>
+                    <li><span class="bad-range">-5%+:</span> Money outflow, BEARISH</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">💳 DII/FII Flows</div>
+                <p>Domestic Institutional Investor and Foreign Institutional Investor net buying/selling.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">Both positive:</span> Smart money (institutions) buying, very bullish</li>
+                    <li><span class="good-range">DII positive, FII neutral:</span> Domestic buying, positive for India-focused investors</li>
+                    <li><span class="warning-range">One positive, one negative:</span> Mixed signals, unclear</li>
+                    <li><span class="bad-range">Both negative:</span> Institutions selling heavily, very bearish</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📊 Volatility</div>
+                <p>Standard deviation of returns. High volatility = more price swings.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">&lt;20% annual:</span> Low volatility, slower but steadier movements, safer</li>
+                    <li><span class="warning-range">20-35% annual:</span> Moderate volatility, typical for Indian stocks</li>
+                    <li><span class="bad-range">35%+:</span> High volatility, wild swings, higher risk of sudden stops</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Balance Sheet -->
+        <div class="section" id="balance-sheet">
+            <h2 class="section-title">Balance Sheet Health</h2>
+
+            <div class="metric-card">
+                <div class="metric-name">⚖️ Debt/Equity Ratio</div>
+                <p>Total Debt ÷ Total Equity. Shows how much the company is leveraged.</p>
+                <p><strong>Example:</strong> D/E 0.5 means ₹1 of debt for every ₹2 of equity. Safe. D/E 2.0 means ₹2 of debt for every ₹1 of equity. Risky.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">&lt;0.3:</span> Very low debt, strong financial position, very safe</li>
+                    <li><span class="good-range">0.3-0.7:</span> Low debt, healthy, good financially</li>
+                    <li><span class="good-range">0.7-1.0:</span> Moderate debt, acceptable for growing companies</li>
+                    <li><span class="warning-range">1.0-1.5:</span> High debt, risky in downturns</li>
+                    <li><span class="bad-range">1.5-2.0:</span> Very high debt, risky, scrutinize carefully</li>
+                    <li><span class="bad-range">2.0+:</span> Extremely high debt, high distress risk</li>
+                </ul>
+                <p><span class="badge badge-success">Always Check:</span> Always verify D/E &lt; 1.0 before buying. It takes 5 seconds and saves you from leverage disasters.</p>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">💧 Current Ratio</div>
+                <p>Current Assets ÷ Current Liabilities. Can the company pay short-term bills?</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">1.5+:</span> Strong liquidity, can pay all short-term debts easily</li>
+                    <li><span class="good-range">1.0-1.5:</span> Adequate liquidity</li>
+                    <li><span class="warning-range">&lt;1.0:</span> Concerning, might struggle to pay bills</li>
+                </ul>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-name">📦 Inventory Turnover</div>
+                <p>How many times per year the company sells and replaces inventory.</p>
+                <p><strong>Interpretation:</strong></p>
+                <ul>
+                    <li><span class="good-range">Higher is better:</span> Company sells inventory quickly, cash flow efficient</li>
+                    <li><span class="bad-range">Very low:</span> Inventory sits unsold, cash locked up, possibly obsolete</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- All 11 Views -->
+        <div class="section" id="all-views">
+            <h2 class="section-title">All 11 Views Explained</h2>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">1</span> Start Here Dashboard</div>
+                <div class="view-purpose"><strong>Purpose:</strong> Quick snapshot of all metrics across 11 categories in one dashboard</div>
+                <p><strong>Best for:</strong> Orientation. See the overall health of new highs in one place.</p>
+                <p><strong>Key columns:</strong> All broad metrics (P/E, ROE, momentum, etc.)</p>
+                <p><strong>Action:</strong> Review weekly to understand market tone. Then dive into specific views based on what you see.</p>
+            </div>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">2</span> Trend Analyzer (Consistent Performers)</div>
+                <div class="view-purpose"><strong>Purpose:</strong> Stocks hitting new highs consistently over months with stable high Trend Scores</div>
+                <p><strong>Best for:</strong> Quality growth investors and medium-term holders (3-12 months)</p>
+                <p><strong>Ranking:</strong> By Trend Score (hits × 3 + hits × 2 + hits × 1) and Acceleration</p>
+                <p><strong>Key signal:</strong> High Trend Score + positive Δ Hits = strong continuation likely</p>
+                <p><strong>Action:</strong> Buy quality stocks from this view for 3-12 month holding period. Focus on ROE 15%+, D/E &lt;0.7.</p>
+            </div>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">3</span> Trend Shift (Week-over-Week Momentum Changes)</div>
+                <div class="view-purpose"><strong>Purpose:</strong> Stocks with changing momentum: accelerating highs or decelerating trends</div>
+                <p><strong>Best for:</strong> Swing traders and momentum chasers (2-8 weeks)</p>
+                <p><strong>Key metrics:</strong> Δ Hits and Δ Gain %</p>
+                <p><strong>Green flag:</strong> Both Δ Hits and Δ Gain % are positive = acceleration</p>
+                <p><strong>Red flag:</strong> Both negative = deceleration, momentum dying</p>
+                <p><strong>Action:</strong> Buy green flags early (Trend Score 40-60), exit red flags quickly. Trade 2-8 week cycles.</p>
+            </div>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">4</span> Emerging Winners (Recently Accelerating)</div>
+                <div class="view-purpose"><strong>Purpose:</strong> Stocks recently hitting new highs with rising momentum and market cap</div>
+                <p><strong>Best for:</strong> Early-stage momentum traders (4-12 weeks)</p>
+                <p><strong>Key signal:</strong> Recent high + accelerating Δ Hits + rising market cap</p>
+                <p><strong>Sweet spot:</strong> "Days to High" = 0-14 days AND Δ Hits positive AND gaining volume</p>
+                <p><strong>Action:</strong> First movers get best returns. Buy these early, exit when Δ becomes negative.</p>
+            </div>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">5</span> Momentum Summary (Ranked by Hit Frequency)</div>
+                <div class="view-purpose"><strong>Purpose:</strong> All new high hitters ranked by 7D, 30D, 60D frequency. Shows consistency.</div>
+                <p><strong>Best for:</strong> Balanced investors wanting both quality and momentum</p>
+                <p><strong>Key insight:</strong> If 7D &lt; 30D &lt; 60D (increasing) = momentum building over 2 months = strong</p>
+                <p><strong>Key insight:</strong> If 7D &gt; 30D &gt; 60D (decreasing) = momentum recently peaked = be cautious</p>
+                <p><strong>Action:</strong> Focus on stocks with increasing frequency. These show accelerating trends.</p>
+            </div>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">6</span> Multi-Bagger Hunt (Persistence Scoring)</div>
+                <div class="view-purpose"><strong>Purpose:</strong> Stocks scored for likelihood of 5-10x returns based on persistence and volatility</div>
+                <p><strong>Best for:</strong> Long-term wealth builders (1-3+ years)</p>
+                <p><strong>Scoring:</strong> 40% frequency score (showing persistence) + 30% historical gain + 30% recent performance</p>
+                <p><strong>Key signal:</strong> High persistence score + high frequency 30-60d = likely multi-baggers</p>
+                <p><strong>Action:</strong> Pick top 10 from this view, buy small positions (0.5% portfolio each), hold 2-3 years. Some 5-10x.</p>
+            </div>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">7</span> Within 5% of 52W High (Strongest Movers)</div>
+                <div class="view-purpose"><strong>Purpose:</strong> Only stocks at or within 5% of their 52-week high. Maximum strength zone.</div>
+                <p><strong>Best for:</strong> Quality growth and breakout buyers</p>
+                <p><strong>Key insight:</strong> These are the TRUE leaders. Fought through resistance, winning.</p>
+                <p><strong>Red flag:</strong> If in this view + P/E &gt;40 + Δ Hits negative = overbought, skip</p>
+                <p><strong>Green flag:</strong> If in this view + ROE 15%+ + D/E &lt;0.7 + Δ Hits positive = buy signal</p>
+                <p><strong>Action:</strong> Screen for quality stocks in this view. Buy the best, hold 6-24 months.</p>
+            </div>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">8</span> Pullback Candidates (5-50% Below High)</div>
+                <div class="view-purpose"><strong>Purpose:</strong> Quality companies that recently pulled back 5-50% from highs. Buying opportunities.</div>
+                <p><strong>Best for:</strong> Value investors and quality hunters</p>
+                <p><strong>Strategy:</strong> Find quality companies (ROE 12%+, D/E &lt;0.7) that hit highs recently but pulled back.</p>
+                <p><strong>Entry logic:</strong> Quality + pullback = safer entry to quality stocks with reduced risk</p>
+                <p><strong>Action:</strong> Buy these when -20% to -30% pullback + all fundamentals strong. Wait for bounce back.</p>
+            </div>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">9</span> Big Dippers (50%+ Below High - Deep Value)</div>
+                <div class="view-purpose"><strong>Purpose:</strong> Stocks trading 50%+ below 52-week high. Deep discounts, recovery or distress plays.</div>
+                <p><strong>Best for:</strong> Deep value investors and contrarians (HIGH RISK/HIGH REWARD)</p>
+                <p><strong>Critical filter:</strong> MUST check why down 50%. Company in trouble? Market panic? Sector rotation?</p>
+                <p><strong>Green flag:</strong> Good ROE (8%+) + reasonable D/E (&lt;1.5) + recent positive news</p>
+                <p><strong>Red flag:</strong> Negative ROE or D/E &gt;2.0 = distressed, too risky</p>
+                <p><strong>Action:</strong> Research thoroughly before buying. If thesis is sound, buy small (0.2-0.5%), scale in on further lows.</p>
+            </div>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">10</span> Industry Tailwinds (Sector Analysis)</div>
+                <div class="view-purpose"><strong>Purpose:</strong> Shows which sectors have most new highs, most momentum. Sector trends.</div>
+                <p><strong>Best for:</strong> Sector rotators and macro-aware investors</p>
+                <p><strong>Key insight:</strong> 20 new highs in IT vs 2 in Auto = IT hot, Auto cold. Follow the hot sectors.</p>
+                <p><strong>Action:</strong> First filter: Which sectors have most new highs? Then go to View 2/4 and pick best stocks IN those sectors.</p>
+                <p><strong>Why it works:</strong> Sector momentum + individual momentum = compounding winners.</p>
+            </div>
+
+            <div class="view-card">
+                <div class="view-title"><span class="view-number">11</span> Start Here Dashboard (Duplicate - Alternative View)</div>
+                <div class="view-purpose"><strong>Purpose:</strong> Same as View 1, alternative access point</div>
+                <p><strong>Best for:</strong> Navigation and orientation</p>
+            </div>
+        </div>
+
+        <!-- Workflows -->
+        <div class="section" id="workflows">
+            <h2 class="section-title">5 Complete Investment Workflows</h2>
+
+            <div class="workflow-card">
+                <div class="workflow-header">🚀 Workflow 1: Momentum Acceleration (2-8 Week Swing Trades)</div>
+                <p><strong>Goal:</strong> Catch recent acceleration in early stages before mainstream awareness</p>
+                <p><strong>Who it's for:</strong> Active traders comfortable with 2-8 week positions</p>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 1</div>
+                        <div class="timeline-value">Go to View 3 (Trend Shift)</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 2</div>
+                        <div class="timeline-value">Filter: Δ Hits &gt;1 AND Δ Gain % positive</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 3</div>
+                        <div class="timeline-value">Sort by Trend Score 40-60 (not overbought)</div>
+                    </div>
+                </div>
+                <p><strong>Entry:</strong> Buy when Trend Score enters 40-60 zone + Δ Hits positive</p>
+                <p><strong>Exit:</strong> When Δ Hits turns negative OR Trend Score &gt;100 (overbought)</p>
+                <p><strong>Position Size:</strong> 1-2% per trade (higher risk)</p>
+                <p><span class="badge badge-warning">Risk:</span> Can reverse fast. Use stop losses at -10%.</p>
+            </div>
+
+            <div class="workflow-card">
+                <div class="workflow-header">📈 Workflow 2: Quality Growth (6-24 Month Buy & Hold)</div>
+                <p><strong>Goal:</strong> Build wealth slowly by holding quality companies hitting new highs</p>
+                <p><strong>Who it's for:</strong> Patient investors with 6+ month time horizons</p>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 1</div>
+                        <div class="timeline-value">View 2 (Trend Analyzer)</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 2</div>
+                        <div class="timeline-value">Sort by ROE (high to low)</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 3</div>
+                        <div class="timeline-value">Filter: ROE 15%+, D/E &lt;0.7, P/E 12-25</div>
+                    </div>
+                </div>
+                <p><strong>Entry:</strong> Buy when all filters are green. Dollar cost average over 4-6 weeks.</p>
+                <p><strong>Hold:</strong> Don't sell until 6-24 months have passed or ROE drops 5%+</p>
+                <p><strong>Position Size:</strong> 2-3% per stock (lower risk)</p>
+                <p><span class="badge badge-success">Advantage:</span> Quality compounds. Most 10-baggers come from 3-5 year holds of 15%+ ROE companies.</p>
+            </div>
+
+            <div class="workflow-card">
+                <div class="workflow-header">💎 Workflow 3: Value + Momentum Hybrid (3-12 Month Holds)</div>
+                <p><strong>Goal:</strong> Find companies with good fundamentals that are accelerating. Best of both worlds.</p>
+                <p><strong>Who it's for:</strong> Balanced investors wanting quality + momentum</p>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 1</div>
+                        <div class="timeline-value">View 8 (Pullback Candidates)</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 2</div>
+                        <div class="timeline-value">Filter: ROE 12%+, D/E &lt;0.8</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 3</div>
+                        <div class="timeline-value">Find those showing positive Δ Hits (momentum returning)</div>
+                    </div>
+                </div>
+                <p><strong>Entry:</strong> Buy when pullback stock starts showing positive momentum again. Double winner signal.</p>
+                <p><strong>Logic:</strong> Good company + value discount + momentum returning = very strong setup</p>
+                <p><strong>Position Size:</strong> 2-3% per stock (medium risk)</p>
+                <p><span class="badge badge-success">Best Risk/Reward:</span> Combines worst-case downside protection (quality + discount) with upside (momentum)</p>
+            </div>
+
+            <div class="workflow-card">
+                <div class="workflow-header">🔥 Workflow 4: Deep Value Contrarian (2-5 Year Holds)</div>
+                <p><strong>Goal:</strong> Find severely beaten-down companies that will bounce back. Highest risk/reward.</p>
+                <p><strong>Who it's for:</strong> Research-heavy investors comfortable with 2-5 year waits</p>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 1</div>
+                        <div class="timeline-value">View 9 (Big Dippers)</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 2</div>
+                        <div class="timeline-value">Filter: 50-70% below high (worst hit, best recovery potential)</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 3</div>
+                        <div class="timeline-value">Check ROE 8%+ and D/E &lt;1.5 (not dead companies)</div>
+                    </div>
+                </div>
+                <p><strong>Research step:</strong> For each candidate, research: Why did it crash? Is it permanent or temporary? Any turnaround signals?</p>
+                <p><strong>Entry:</strong> ONLY buy if you have thesis confirmed. Buy 0.2-0.5% position, then scale in on every 10% further drop.</p>
+                <p><strong>Exit:</strong> Take 25-50% profits on first bounce (fast money), then hold remaining for 3+ years</p>
+                <p><span class="badge badge-danger">Warning:</span> Can go to zero. Never more than 1% of portfolio in any one deep value bet.</p>
+            </div>
+
+            <div class="workflow-card">
+                <div class="workflow-header">🌍 Workflow 5: Sector Rotation (Tactical, Every 4 Weeks)</div>
+                <p><strong>Goal:</strong> Follow sector momentum. Rotate capital into hot sectors.</p>
+                <p><strong>Who it's for:</strong> Macro-aware investors who like adapting to market cycles</p>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 1</div>
+                        <div class="timeline-value">View 10 (Industry Tailwinds)</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 2</div>
+                        <div class="timeline-value">Count new highs per sector. Which sectors have 10+?</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-label">Step 3</div>
+                        <div class="timeline-value">Go to View 4 (Emerging Winners), filter by hot sector</div>
+                    </div>
+                </div>
+                <p><strong>Action:</strong> Build 30-50% portfolio in hot sector stocks, rebalance every 4 weeks.</p>
+                <p><strong>Why it works:</strong> Sector momentum is real. IT in bull phase → 40% of portfolio in INFY/TCS/WIPRO. But rotate when sector cools.</p>
+                <p><strong>Position Size:</strong> 2-5% per stock, 30-50% per sector (medium risk)</p>
+                <p><span class="badge badge-info">Note:</span> Requires discipline to rotate regularly. But outperforms buy-and-hold in cyclic markets.</p>
+            </div>
+        </div>
+
+        <!-- Red & Green Flags -->
+        <div class="section" id="red-green">
+            <h2 class="section-title">Red Flags & Green Flags - Complete Matrix</h2>
+
+            <div class="grid-2">
+                <div>
+                    <h3 style="color: var(--danger-color); margin-bottom: 20px;">🚨 Red Flags (EXIT or SKIP)</h3>
+
+                    <div class="callout callout-danger">
+                        <strong>Metric:</strong> P/E &lt; 2 or &gt; 50<br>
+                        <strong>Alert:</strong> Broken company or bubble<br>
+                        <strong>Action:</strong> SKIP
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <strong>Metric:</strong> ROE &lt; 5%<br>
+                        <strong>Alert:</strong> Poor quality business<br>
+                        <strong>Action:</strong> SKIP
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <strong>Metric:</strong> D/E &gt; 2.0<br>
+                        <strong>Alert:</strong> Over-leveraged, risky<br>
+                        <strong>Action:</strong> SKIP or EXIT
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <strong>Metric:</strong> Δ Hits -3 or lower<br>
+                        <strong>Alert:</strong> Momentum collapsing<br>
+                        <strong>Action:</strong> EXIT swing trades, CAUTION on holds
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <strong>Metric:</strong> Operating Margin &lt; 2%<br>
+                        <strong>Alert:</strong> Business barely profitable<br>
+                        <strong>Action:</strong> SKIP
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <strong>Metric:</strong> OPM declining last 2 quarters<br>
+                        <strong>Alert:</strong> Profitability deteriorating<br>
+                        <strong>Action:</strong> EXIT or SKIP
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <strong>Metric:</strong> Trend Score falling + Δ Hits falling<br>
+                        <strong>Alert:</strong> Momentum dead<br>
+                        <strong>Action:</strong> EXIT all positions
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <strong>Metric:</strong> DII and FII both very negative<br>
+                        <strong>Alert:</strong> Smart money exiting<br>
+                        <strong>Action:</strong> FOLLOW THEM OUT
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="color: var(--success-color); margin-bottom: 20px;">✅ Green Flags (BUY)</h3>
+
+                    <div class="callout callout-success">
+                        <strong>Metric:</strong> P/E 12-20 + ROE 15%+<br>
+                        <strong>Alert:</strong> Quality at fair value<br>
+                        <strong>Action:</strong> BUY or ADD
+                    </div>
+
+                    <div class="callout callout-success">
+                        <strong>Metric:</strong> Δ Hits +2 or higher<br>
+                        <strong>Alert:</strong> Momentum accelerating<br>
+                        <strong>Action:</strong> BUY early (Trend Score 40-60)
+                    </div>
+
+                    <div class="callout callout-success">
+                        <strong>Metric:</strong> D/E &lt; 0.5 + ROE 15%+<br>
+                        <strong>Alert:</strong> Strong fundamentals<br>
+                        <strong>Action:</strong> BUY for long hold
+                    </div>
+
+                    <div class="callout callout-success">
+                        <strong>Metric:</strong> Dividend Yield &gt; 2% + ROE growing<br>
+                        <strong>Alert:</strong> Profits growing + rewarding shareholders<br>
+                        <strong>Action:</strong> BUY for income + growth
+                    </div>
+
+                    <div class="callout callout-success">
+                        <strong>Metric:</strong> Recent new high + Operating Margin 12%+<br>
+                        <strong>Alert:</strong> Quality hitting peak<br>
+                        <strong>Action:</strong> BUY or ADD
+                    </div>
+
+                    <div class="callout callout-success">
+                        <strong>Metric:</strong> Frequency: 7D &lt; 30D (and 30D &lt; 60D)<br>
+                        <strong>Alert:</strong> Momentum building over time<br>
+                        <strong>Action:</strong> BUY (strong trend ahead)
+                    </div>
+
+                    <div class="callout callout-success">
+                        <strong>Metric:</strong> Pulled back -20-30% but ROE/D/E still strong<br>
+                        <strong>Alert:</strong> Quality company at discount<br>
+                        <strong>Action:</strong> BUY (safer entry to quality)
+                    </div>
+
+                    <div class="callout callout-success">
+                        <strong>Metric:</strong> DII positive + Recent news positive<br>
+                        <strong>Alert:</strong> Institutional buying + positive event<br>
+                        <strong>Action:</strong> BUY (great setup)</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Closing -->
+        <div class="section" style="background: linear-gradient(135deg, #f0f8ff 0%, #e7f3ff 100%); padding: 30px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+            <h2 style="color: var(--primary-color); margin-bottom: 15px;">You Now Understand the Full Picture</h2>
+            <p>You know:</p>
+            <ul>
+                <li>✅ Why 52-week highs matter and how they work</li>
+                <li>✅ What every major metric means and how to interpret it</li>
+                <li>✅ What all 11 views are designed for</li>
+                <li>✅ How to execute 5 different investment workflows</li>
+                <li>✅ What red flags mean and what green flags signal</li>
+            </ul>
+            <p style="margin-top: 20px;"><strong>Next step:</strong> Open the app and start applying these frameworks. Your first trade is the most important - it will cement your learning.</p>
+            <p>Reference the <strong><a href="glossary.html">Glossary</a></strong> whenever you see a term you don't recognize. Questions? Check the <strong><a href="quick-start.html">Quick Start FAQ</a></strong>.</p>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>52-Week High Tracker | Interpretation Guide | Last Updated: March 2026</p>
+        <p style="margin-top: 10px;"><a href="index.html">Back to Documentation Hub</a> | <a href="quick-start.html">Quick Start</a> | <a href="glossary.html">Financial Glossary</a></p>
+    </footer>
+
+</body>
+</html>

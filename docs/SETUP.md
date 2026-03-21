@@ -544,6 +544,9 @@ pytest tests/
 │   └── __pycache__/                        # Python cache
 ├── docs/                    # Documentation
 │   ├── README.md                           # Project overview
+│   ├── QUICK_START.md                      # First 5 minutes guide
+│   ├── INTERPRETATION_GUIDE.md             # How to read tables & big picture
+│   ├── GLOSSARY.md                         # Financial terms & metrics
 │   ├── ARCHITECTURE.md                     # System design
 │   ├── WORKFLOWS.md                        # Detailed workflows per view
 │   ├── API_REFERENCE.md                    # Function documentation

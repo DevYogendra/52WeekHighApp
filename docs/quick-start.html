@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start - 52-Week High Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tour-step {
+            background: var(--light-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .tour-step strong {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+
+        .investor-styles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .style-card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .style-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .style-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .style-card .views {
+            background: var(--light-bg);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .faq-item {
+            background: var(--light-bg);
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .faq-item strong {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .workflow-section {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .workflow-title {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .step {
+            padding: 15px;
+            background: var(--light-bg);
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .step::before {
+            content: "→ ";
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .green-flag {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .red-flag {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⚡ Quick Start Guide</h1>
+            <p>Get up and running in 5 minutes</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-breadcrumb">
+            <a href="index.html">← Back to Hub</a> | 
+            <a href="interpretation-guide.html">Interpretation Guide →</a>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc">
+            <div class="toc-title">📑 On This Page</div>
+            <ul>
+                <li><a href="#overview">Your 30-Second Overview</a></li>
+                <li><a href="#5minute">Your 5-Minute Tour</a></li>
+                <li><a href="#investor-style">Pick Your Investor Style</a></li>
+                <li><a href="#workflows">3 Practical Workflows</a></li>
+                <li><a href="#red-green-flags">Red & Green Flags</a></li>
+                <li><a href="#faq">Common Questions</a></li>
+                <li><a href="#pro-tips">Pro Tips</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+            </ul>
+        </div>
+
+        <!-- 30 Second Overview -->
+        <div class="section" id="overview">
+            <h2 class="section-title">Your 30-Second Overview</h2>
+            <div class="callout callout-info">
+                <strong>What is this app?</strong> It finds Indian stocks hitting 52-week highs and shows them through 11 different analytical lenses (momentum, value, quality, etc.).
+            </div>
+            <div class="callout callout-success">
+                <strong>Why use 52-week highs?</strong> Stocks hitting new highs often have the strongest fundamentals, momentum, and likelihood of continued growth.
+            </div>
+            <div class="callout callout-warning">
+                <strong>The decision framework:</strong> (1) Pick the view that matches your investment style (2) Check financial metrics (3) Execute your workflow
+            </div>
+        </div>
+
+        <!-- 5-Minute Tour -->
+        <div class="section" id="5minute">
+            <h2 class="section-title">Your 5-Minute Walking Tour</h2>
+            <p>Here's exactly what to do:</p>
+
+            <div class="tour-step">
+                <strong>⏱️ Step 1: Start at View 1 (Start Here Dashboard)</strong>
+                <p>You'll see 11 quick metrics across momentum, quality, and value - this is your orientation point.</p>
+            </div>
+
+            <div class="tour-step">
+                <strong>⏱️ Step 2: Find Which View Calls to You</strong>
+                <p>Skim Views 2-11 in the sidebar. Read their descriptions (shown when you click them) and see which one aligns with your thinking.</p>
+            </div>
+
+            <div class="tour-step">
+                <strong>⏱️ Step 3: Click Into That View</strong>
+                <p>You'll see an interactive table with 20-30 columns. Don't panic - only 5-8 columns matter for your decision (see the table below).</p>
+            </div>
+
+            <div class="tour-step">
+                <strong>⏱️ Step 4: Sort and Filter</strong>
+                <p>Click the column headers to sort. Look for patterns: Good P/E? Healthy debt? Strong ROE? These are your checkboxes.</p>
+            </div>
+
+            <div class="tour-step">
+                <strong>⏱️ Step 5: Deep Dive into Your Top 3 Picks</strong>
+                <p>For each stock you like, check: P/E ratio (value), ROE (quality), Debt/Equity (safety), and momentum trends. See "Red Flags" below.</p>
+            </div>
+
+            <div class="tour-step">
+                <strong>⏱️ Step 6: Execute Your Decision</strong>
+                <p>Use the workflows below that match your style. Buy, wait for pullback, or skip - each view provides a different signal.</p>
+            </div>
+        </div>
+
+        <!-- Columns to Watch First -->
+        <div class="section">
+            <h2 class="section-title">📊 Columns You Need to Know First</h2>
+            <p><strong>Don't overwhelm yourself with 30 columns.</strong> These 5-8 matter most for your decision:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>What It Means</th>
+                        <th>Good Sign</th>
+                        <th>Bad Sign</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Price</strong></td>
+                        <td>Current stock price</td>
+                        <td>Any price point, but affects position sizing</td>
+                        <td>Extremely high/low can signal extremes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>P/E Ratio</strong></td>
+                        <td>Price ÷ Earnings per share</td>
+                        <td>10-20 (medium), &lt;10 (cheap), &lt;5 (very cheap)</td>
+                        <td>&gt;30 (expensive), &lt;2 (risky)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ROE %</strong></td>
+                        <td>Return on equity (profit ÷ equity)</td>
+                        <td>15%+ (excellent), 12-15% (good)</td>
+                        <td>&lt;8% (poor quality)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>D/E Ratio</strong></td>
+                        <td>Debt ÷ Equity (cash health)</td>
+                        <td>&lt;0.5 (strong), &lt;1.0 (healthy)</td>
+                        <td>&gt;2.0 (risky), &gt;3.0 (dangerous)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Δ Hits</strong></td>
+                        <td>How many more times hit high this week vs last week</td>
+                        <td>+2, +3 (accelerating), 0-1 (stable)</td>
+                        <td>-2, -3 (decelerating)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>52W High %</strong></td>
+                        <td>How far from 52-week high right now</td>
+                        <td>0-3% (near high, strong), -20% (pullback opportunity)</td>
+                        <td>-60%+ (likely deep value, needs research)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Trend Score</strong></td>
+                        <td>Composite momentum indicator</td>
+                        <td>75+ (strong trend)</td>
+                        <td>&lt;30 (weak trend)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="callout callout-success">
+                <strong>Pro Tip:</strong> Sort by P/E first (to find cheaper stocks) or ROE first (to find quality). Then check D/E to ensure safety. That 3-column check handles 70% of your decision-making.
+            </div>
+        </div>
+
+        <!-- Investor Styles -->
+        <div class="section" id="investor-style">
+            <h2 class="section-title">Pick Your Investor Style</h2>
+            <p>Different views serve different strategies. Find yours and focus there:</p>
+
+            <div class="investor-styles">
+                <div class="style-card">
+                    <h4>🚀 Momentum Trader</h4>
+                    <p>You chase recent winners with accelerating gains.</p>
+                    <p><strong>Focus on:</strong> Stocks at new highs with rising momentum.</p>
+                    <div class="views">
+                        <strong>Views:</strong><br>2 (Trend Analyzer)<br>3 (Trend Shift)<br>4 (Emerging Winners)
+                    </div>
+                </div>
+
+                <div class="style-card">
+                    <h4>📈 Quality Growth</h4>
+                    <p>You want companies with good fundamentals hitting new highs.</p>
+                    <p><strong>Focus on:</strong> ROE 15%+, low debt, growing earnings, hitting highs = double winners.</p>
+                    <div class="views">
+                        <strong>Views:</strong><br>2 (Trend Analyzer)<br>7 (Within 5% of High)<br>11 (Industry Trends)
+                    </div>
+                </div>
+
+                <div class="style-card">
+                    <h4>💎 Value Hunter</h4>
+                    <p>You find good companies trading at discounts (pullbacks).</p>
+                    <p><strong>Focus on:</strong> Quality companies that recently pulled back 5-50%.</p>
+                    <div class="views">
+                        <strong>Views:</strong><br>8 (Pullback Candidates)<br>9 (Deep Value)<br>1 (Start Here Dashboard)
+                    </div>
+                </div>
+
+                <div class="style-card">
+                    <h4>🎯 Hybrid Approach</h4>
+                    <p>You combine momentum + quality + valuation checks.</p>
+                    <p><strong>Focus on:</strong> Best of all worlds - good companies, hitting highs, at reasonable valuations.</p>
+                    <div class="views">
+                        <strong>Views:</strong><br>2 (Trend Analyzer)<br>7 (Within 5%)<br>5 (Momentum Summary)
+                    </div>
+                </div>
+
+                <div class="style-card">
+                    <h4>🔥 Deep Value</h4>
+                    <p>You hunt for severely discounted gems (recovery plays).</p>
+                    <p><strong>Focus on:</strong> Stocks 50%+ down but with decent ROE, waiting for bounce back.</p>
+                    <div class="views">
+                        <strong>Views:</strong><br>9 (Big Dippers)<br>1 (Start Here)<br>8 (Pullback Candidates)
+                    </div>
+                </div>
+
+                <div class="style-card">
+                    <h4>🌍 Sector Rotation</h4>
+                    <p>You follow industry trends and pick winners within hot sectors.</p>
+                    <p><strong>Focus on:</strong> Which sectors have most new highs, then pick the best stocks in those sectors.</p>
+                    <div class="views">
+                        <strong>Views:</strong><br>11 (Industry Tailwinds)<br>4 (Emerging Winners)<br>Any other view + filter by sector
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3 Practical Workflows -->
+        <div class="section" id="workflows">
+            <h2 class="section-title">🔄 Your 3 Practical Workflows</h2>
+
+            <!-- Workflow 1 -->
+            <div class="workflow-section">
+                <div class="workflow-title">Workflow 1: Find a Quality Stock Hitting New Highs (Long Hold)</div>
+                <div class="step">Start in View 7 (Within 5% of 52W High) - these are the leaders</div>
+                <div class="step">Sort by ROE (descending) - find those with ROE &gt; 15%</div>
+                <div class="step">Check Debt/Equity: Should be &lt; 1.0 (ideally &lt; 0.5)</div>
+                <div class="step">Check P/E: Should be 12-20 (not too cheap, not expensive)</div>
+                <div class="step">Look at Δ Hits: Positive is good (momentum still there), declining is warning</div>
+                <div class="step">Decision: If all green, buy for 1-3 year hold. If any red flag, skip and find next one</div>
+            </div>
+
+            <!-- Workflow 2 -->
+            <div class="workflow-section">
+                <div class="workflow-title">Workflow 2: Catch a Stock Before It Rockets (Momentum Play - 3-6 Months)</div>
+                <div class="step">Start in View 3 (Trend Shift) or View 4 (Emerging Winners) - early momentum signs</div>
+                <div class="step">Find stocks with accelerating Δ Hits (went from 0 to +2 or higher recently)</div>
+                <div class="step">Check Gain %: Should be showing positive momentum but not yet sky-high (200%+)</div>
+                <div class="step">Quick sanity check: Is P/E reasonable (&lt;30) and ROE positive (&gt;5%)?</div>
+                <div class="step">Entry: Buy early entries when Trend Score is 40-60 (not overextended)</div>
+                <div class="step">Exit: When Δ Hits goes negative (momentum fading) or at +100% gain</div>
+            </div>
+
+            <!-- Workflow 3 -->
+            <div class="workflow-section">
+                <div class="workflow-title">Workflow 3: Find a Deep Value Bargain (Contrarian - 2-5 Year Hold)</div>
+                <div class="step">Start in View 9 (Deep Dippers) or View 8 (Pullback Candidates) - find the discounts</div>
+                <div class="step">Filter down to 50%+ discounts (these require serious homework)</div>
+                <div class="step">Check the company basics: ROE &gt; 8%? Debt/Equity reasonable (&lt; 1.5)?</div>
+                <div class="step">Ask yourself: Why is it down 50%? (Bad earnings? Market panic? Sector crisis?)</div>
+                <div class="step">Research: Only if reason for fall seems temporary, not structural</div>
+                <div class="step">Entry: Buy 25% of intended position, then average down if it drops further (scaling in)</div>
+                <div class="step">Exit: When it recovers 25-50% from purchase price (take profits) or after 3+ years</div>
+            </div>
+        </div>
+
+        <!-- Red & Green Flags -->
+        <div class="section" id="red-green-flags">
+            <h2 class="section-title">🚨 Red Flags & ✅ Green Flags</h2>
+
+            <div class="grid-2">
+                <div>
+                    <h3 style="color: var(--danger-color); margin-bottom: 15px;">🚨 Red Flags (SKIP)</h3>
+                    <div class="callout callout-danger">
+                        <strong>P/E &lt; 2 or &gt; 50:</strong> Either broken company or speculative bubble. Risky.
+                    </div>
+                    <div class="callout callout-danger">
+                        <strong>ROE &lt; 5%:</strong> Company is barely profitable. Low quality.
+                    </div>
+                    <div class="callout callout-danger">
+                        <strong>Debt/Equity &gt; 2:</strong> Company is over-leveraged. Risky in downturns.
+                    </div>
+                    <div class="callout callout-danger">
+                        <strong>Δ Hits turning sharply negative:</strong> Momentum is dying. Likely peaked.
+                    </div>
+                    <div class="callout callout-danger">
+                        <strong>Operating Margin &lt; 3%:</strong> Company barely makes profit on sales. Risky.
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="color: var(--success-color); margin-bottom: 15px;">✅ Green Flags (BUY)</h3>
+                    <div class="callout callout-success">
+                        <strong>P/E 12-20 + ROE 15%+:</strong> Good valuation + high quality. Sweet spot.
+                    </div>
+                    <div class="callout callout-success">
+                        <strong>Δ Hits positive & rising:</strong> Momentum accelerating. Strong signal.
+                    </div>
+                    <div class="callout callout-success">
+                        <strong>Debt/Equity &lt; 0.5 + Operating Margin &gt; 10%:</strong> Strong fundamentals.
+                    </div>
+                    <div class="callout callout-success">
+                        <strong>Div Yield &gt; 2% with growing ROE:</strong> Making money AND rewarding shareholders.
+                    </div>
+                    <div class="callout callout-success">
+                        <strong>Hitting new 52W high near end of week:</strong> Institutional buying day (higher conviction).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="section" id="faq">
+            <h2 class="section-title">❓ Common Questions & Answers</h2>
+
+            <div class="faq-item">
+                <strong>Q: "Does hitting a 52-week high mean it will keep going up?"</strong>
+                <p>No, it's a prerequisite, not a guarantee. You still need to check quality metrics (ROE, debt), valuation (P/E), and momentum (Δ Hits). A 52-week high + good metrics = likely to continue up.</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "Which view should I look at first?"</strong>
+                <p>Start with View 1 (Start Here) for orientation, then pick based on your strategy from the "Investor Styles" section above. Momentum trader → View 2. Value hunter → View 8. Unsure → View 5 (Momentum Summary).</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "What does P/E &lt;10 mean? Is that always good?"</strong>
+                <p>P/E &lt;10 usually means cheap. BUT check why (sometimes companies with very low P/E are cheap for a reason - going out of business, high debt, etc.). Always cross-check with ROE and debt/equity.</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "I see a stock I like. What's the next step?"</strong>
+                <p>First, read the "Columns You Need to Know First" table above and verify P/E, ROE, D/E all look good. Then decide based on where you found it: New high? → Buy part soon. Pulled back? → Buy if all metrics strong. Crashed? → Buy with small position, scale in.</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "How often should I check the app?"</strong>
+                <p>For momentum plays: Every day. High changes → new opportunities daily. For value/long-term: 2x per week is enough (good opportunities don't disappear in 3 days).</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "Can I use this for day trading?"</strong>
+                <p>Data updates daily, so this is better for swing trades (3-30 days) and position trading (months-years). Very aggressive day trading is not the app's strength.</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "What if I don't understand a column?"</strong>
+                <p>Go to the "Columns to Watch First" table above, or visit the <strong><a href="glossary.html">Glossary</a></strong> for detailed explanations of every metric.</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "What if I don't see any good opportunities today?"</strong>
+                <p>That's okay. Markets cycle. Don't force trades. Save your capital and wait for the next opportunity (could be tomorrow, could be next week). The best trade is no trade.</p>
+            </div>
+        </div>
+
+        <!-- Pro Tips -->
+        <div class="section" id="pro-tips">
+            <h2 class="section-title">💡 Pro Tips to Crush It</h2>
+
+            <div class="card">
+                <div class="card-title">Tip 1: Use Multiple Signals</div>
+                <p>Don't rely on a single metric. If a stock looks great on momentum (Δ Hits), double-check quality (ROE) and valuation (P/E). Single signals are noise; multiple signals are symphony.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Tip 2: Sort the Table by Your Criteria</div>
+                <p>Click the column headers! Sort by ROE (high to low) to find quality, then look for those near 52W highs. Sort by P/E to find value. This is powerful and takes 3 clicks.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Tip 3: Check the Industry (View 11)</div>
+                <p>Some sectors are on fire (20 companies hitting highs), others are cold (2 companies). Pick your stock from a hot industry - industry tailwinds are real.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Tip 4: Track Your Picks</div>
+                <p>Export a few stocks you like from the table. Track them for a week. Did they go up? Why? Did they go down? Why? This builds your intuition faster than anything.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Tip 5: P/E Ratio is Your Starting Point</div>
+                <p>P/E tells you valuation at a glance. P/E 10 = cheap. P/E 30 = expensive. Most profitable companies cluster around 15-25. Use this as your anchor metric.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Tip 6: 52W High % Shows Momentum Timing</div>
+                <p>-1% = near peak (very strong momentum, entering now is risky). -20% = pullback (safer entry). -60%+ = deep value (high reward, high risk). Pick your risk/reward ratio.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Tip 7: Don't Overlook Debt/Equity</div>
+                <p>A cheap stock with high debt can crash in a downturn. Always check D/E (should be &lt;1.0). It takes 5 seconds and saves you 50% portfolio loss.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Tip 8: Combine Views for Powerful Thesis</div>
+                <p>Find a quality stock (View 2 + high ROE) that's at a pullback (View 8) in a hot industry (View 11). This thesis is bulletproof. Do this weekly and you'll find your best picks.</p>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="section" id="troubleshooting">
+            <h2 class="section-title">🔧 Troubleshooting</h2>
+
+            <div class="faq-item">
+                <strong>Q: "The table looks overwhelming. Too many columns."</strong>
+                <p><strong>A:</strong> You don't need to understand all 30 columns right now. Focus on the 5-7 "Columns You Need to Know First" (above). Master those, then expand. Quality → Quantity.</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "I sorted the table but nothing changed."</strong>
+                <p><strong>A:</strong> Click the column header itself (not the data cell). You should see a small arrow appear indicating sort direction. If stuck, refresh the page and try again.</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "View 1 shows 11 metrics but I only see 5. Did it break?"</strong>
+                <p><strong>A:</strong> Scroll right in the table. The metrics are there, but the screen isn't wide enough to fit all. Mobile users will see this especially.</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "Why does View 2 show totally different stocks than View 3?"</strong>
+                <p><strong>A:</strong> Each view filters by different criteria. View 2 = consistent performers over time (Trend Score). View 3 = rapid momentum shift (week-over-week). Same data, different lens. Both are valid.</p>
+            </div>
+
+            <div class="faq-item">
+                <strong>Q: "I don't understand what 'Δ Hits' means."</strong>
+                <p><strong>A:</strong> Go to the <strong><a href="glossary.html">Glossary</a></strong> and search for "Δ Hits". It explains what it means, why it matters, and how to interpret it. Much more detail there.</p>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="section" style="background: linear-gradient(135deg, #e7f3ff 0%, #f0f8ff 100%); padding: 30px; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+            <h2 style="color: var(--primary-color); margin-bottom: 15px;">Ready to Dive Deeper?</h2>
+            <p><strong>Quick Start is done!</strong> You now know how to navigate the app and execute the basic workflows.</p>
+            <p style="margin: 15px 0;"><strong>Next Step 1:</strong> Read the <strong><a href="interpretation-guide.html">Interpretation Guide</a></strong> to understand the investment philosophy and deep-dive into every metric.</p>
+            <p><strong>Next Step 2:</strong> Use the <strong><a href="glossary.html">Glossary</a></strong> as your reference when you encounter terms you don't recognize.</p>
+            <p><strong>Next Step 3:</strong> Open the app and start applying what you've learned. Pick your investor style from above and execute one of the three workflows today.</p>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>52-Week High Tracker | Quick Start Guide | Last Updated: March 2026</p>
+        <p style="margin-top: 10px;"><a href="index.html">Back to Documentation Hub</a> | <a href="interpretation-guide.html">Interpretation Guide</a> | <a href="glossary.html">Glossary</a></p>
+    </footer>
+
+</body>
+</html>
