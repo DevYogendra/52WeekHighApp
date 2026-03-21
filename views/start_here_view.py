@@ -5,10 +5,7 @@ import streamlit as st
 
 from config import TABLE_HIGHS
 from db_utils import (
-    add_screener_links,
     compute_industry_tailwind_stats,
-    format_decimal_columns,
-    format_major_columns,
     get_data_for_date,
     get_downfromhigh_data_for_date,
     get_downfromhigh_dates,
@@ -19,21 +16,35 @@ from db_utils import (
     get_momentum_summary,
     get_persistence_scores,
 )
+from grid_utils import render_interactive_table
 
 
 def _render_table(df: pd.DataFrame, columns: list[str], rename_map: dict[str, str]) -> None:
-    if df.empty:
-        st.info("No matching data available.")
-        return
-
-    display_df = df[columns].copy().rename(columns=rename_map)
-    display_df = format_major_columns(display_df, ["MCap", "First MCap", "MCap (Cr)"])
-    display_df = format_decimal_columns(
-        display_df,
-        one_decimal_cols=["Gain %", "Gain TW %", "Delta Gain"],
-        two_decimal_cols=["Persistence", "Acceleration", "Weighted Gain %", "Avg Hits 7D"],
+    render_interactive_table(
+        df,
+        columns=columns,
+        key=f"start_here_{'_'.join(columns)}",
+        rename_map=rename_map,
+        integer_cols=[
+            "hits_7",
+            "hits_30",
+            "hits_60",
+            "hits_this",
+            "hits_last",
+            "hits_delta",
+            "Momentum Stocks",
+            "Trend Score",
+            "Hits 0-7D",
+            "Hits 8-30D",
+            "Hits 31-60D",
+        ],
+        one_decimal_cols=["%_gain_mc", "gain_pct_this", "gain_delta"],
+        two_decimal_cols=["persistence_score", "Acceleration", "Weighted Gain %", "Avg Hits 7D"],
+        major_cols=["market_cap", "first_market_cap", "market_cap_cr"],
+        link_col="name" if "name" in columns else None,
+        height=260,
+        fit_columns=True,
     )
-    st.markdown(display_df.to_html(index=False, escape=False), unsafe_allow_html=True)
 
 
 def _get_week_range(date: datetime.date) -> tuple[datetime.date, datetime.date]:
@@ -101,7 +112,7 @@ def _get_trend_shift_snapshot(limit: int = 8) -> pd.DataFrame:
         return rising
 
     rising = rising.rename(columns={"industry_this": "industry"})
-    return add_screener_links(rising)
+    return rising
 
 
 def main() -> None:
@@ -157,8 +168,6 @@ def main() -> None:
             ["Trend Score", "Acceleration", "%_gain_mc"],
             ascending=[False, False, False],
         ).head(10)
-        top_trend_df = add_screener_links(top_trend_df)
-
         top_industry_df = compute_industry_tailwind_stats(momentum_df[momentum_df["hits_7"] >= 2].copy())
         if not top_industry_df.empty:
             top_industry_df = top_industry_df.rename(
@@ -170,7 +179,7 @@ def main() -> None:
             ).sort_values(["Momentum Stocks", "Weighted Gain %"], ascending=[False, False]).head(8)
 
     top_shift_df = _get_trend_shift_snapshot()
-    top_persistence_df = add_screener_links(persistence_df.head(8)) if not persistence_df.empty else pd.DataFrame()
+    top_persistence_df = persistence_df.head(8) if not persistence_df.empty else pd.DataFrame()
 
     st.caption(f"Latest highs data date: {latest_highs_date}")
 
@@ -191,10 +200,11 @@ def main() -> None:
         """
     )
 
-    left, right = st.columns(2)
+    tab1, tab2 = st.tabs(["Top Signals", "Context"])
 
-    with left:
+    with tab1:
         st.markdown("### Best Current Momentum")
+        st.caption("Highest-conviction names right now. Full-width layout makes the score, acceleration, and hit columns readable.")
         _render_table(
             top_trend_df,
             ["name", "industry", "Trend Score", "Acceleration", "hits_7", "%_gain_mc"],
@@ -207,6 +217,7 @@ def main() -> None:
         )
 
         st.markdown("### Rising This Week")
+        st.caption("Weekly movers with improving hit count and market-cap trend.")
         _render_table(
             top_shift_df,
             ["name", "industry", "hits_this", "hits_delta", "gain_pct_this", "gain_delta"],
@@ -220,8 +231,9 @@ def main() -> None:
             },
         )
 
-    with right:
+    with tab2:
         st.markdown("### Sector Tailwinds")
+        st.caption("Industries with multiple active names. This stays full width so averages and weighted gain remain visible.")
         _render_table(
             top_industry_df,
             ["industry", "Momentum Stocks", "Avg Hits 7D", "Weighted Gain %"],
@@ -229,6 +241,7 @@ def main() -> None:
         )
 
         st.markdown("### Persistent Leaders")
+        st.caption("Stocks that keep reappearing over the lookback windows.")
         _render_table(
             top_persistence_df,
             ["name", "industry", "hits_7", "hits_30", "persistence_score", "%_gain_mc"],

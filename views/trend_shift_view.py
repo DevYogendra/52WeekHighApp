@@ -4,7 +4,8 @@ import pandas as pd
 import streamlit as st
 
 from config import TABLE_HIGHS
-from db_utils import add_screener_links, format_decimal_columns, get_historical_market_cap, get_latest_table_date
+from db_utils import get_historical_market_cap, get_latest_table_date
+from grid_utils import render_interactive_table
 
 
 def get_week_range(date):
@@ -35,23 +36,24 @@ def compute_weekly_summary(df, start_date, end_date):
 
 
 def main():
-    st.title("📊 Trend Shift Analyzer")
+    st.title("Trend Shift Analyzer")
     st.markdown(
         """
-        This page helps you **analyze week-over-week momentum shifts** across stocks in terms of:
+        This page helps you analyze week-over-week momentum shifts across stocks in terms of:
 
-        - 📈 Frequency of 52-week high appearances (`Hits`)
-        - 📊 Change in market cap (`% Gain`)
+        - Frequency of 52-week high appearances (`Hits`)
+        - Change in market cap (`% Gain`)
 
         Use this tool to:
-        - Identify **rising momentum stocks** early
-        - Spot stocks **losing momentum** (risk of trend reversal)
-        - Focus on companies within a specific **Market Cap range** (e.g., midcaps)
+        - Identify rising momentum stocks early
+        - Spot stocks losing momentum
+        - Focus on companies within a specific market cap range
 
-        **Tip:** Sort by Δ Hits or Δ Gain to surface accelerating trends.
+        Tip: Sort by Delta Hits or Delta Gain to surface accelerating trends.
         """
     )
     st.markdown("Compare weekly changes in momentum for stocks and industries.")
+    st.caption("Use the MCap column filter in the table for market-cap screening.")
 
     df = get_historical_market_cap()
     if df.empty:
@@ -88,34 +90,18 @@ def main():
     merged = merged.sort_values(by="hits_delta", ascending=False)
 
     merged["market_cap_cr"] = merged["market_cap_end_this"] / 1e7
-    market_cap_cr = merged["market_cap_cr"].dropna()
-    if market_cap_cr.empty:
-        st.warning("No market cap data available for filtering.")
-        return
-
-    min_cr = int(market_cap_cr.min())
-    max_cr = int(market_cap_cr.max())
-    if min_cr == max_cr:
-        max_cr += 1
-
-    cr_filter = st.sidebar.slider("Market Cap Filter (₹ Cr)", min_value=min_cr, max_value=max_cr, value=(min_cr, max_cr))
-
-    filtered = merged[merged["market_cap_cr"].between(cr_filter[0], cr_filter[1])].copy()
+    filtered = merged.copy()
     filtered["nse_code"] = filtered["nse_code_this"]
     filtered["bse_code"] = filtered["bse_code_this"]
-    filtered = add_screener_links(filtered)
 
     rising = filtered[(filtered["hits_delta"] > 0) & (filtered["gain_delta"] > 0)].copy()
     losing = filtered[(filtered["hits_delta"] < 0) & (filtered["gain_delta"] < 0)].copy()
 
     def render_table(frame, title):
         st.markdown(f"### {title}")
-        if frame.empty:
-            st.info("No matching stocks.")
-            return
-
-        display_df = frame[
-            [
+        render_interactive_table(
+            frame,
+            columns=[
                 "name",
                 "industry_this",
                 "market_cap_end_this",
@@ -125,9 +111,9 @@ def main():
                 "gain_pct_this",
                 "hits_delta",
                 "gain_delta",
-            ]
-        ].rename(
-            columns={
+            ],
+            key=f"trend_shift_{title.replace(' ', '_').lower()}",
+            rename_map={
                 "name": "Company",
                 "industry_this": "Industry",
                 "market_cap_end_this": "MCap",
@@ -135,20 +121,18 @@ def main():
                 "hits_this": "Hits TW",
                 "gain_pct_last": "%Gain LW",
                 "gain_pct_this": "%Gain TW",
-                "hits_delta": "Δ Hits",
-                "gain_delta": "Δ Gain",
-            }
+                "hits_delta": "Delta Hits",
+                "gain_delta": "Delta Gain",
+            },
+            integer_cols=["hits_last", "hits_this", "hits_delta"],
+            one_decimal_cols=["gain_pct_last", "gain_pct_this", "gain_delta"],
+            major_cols=["market_cap_end_this"],
+            link_col="name",
+            height=320,
         )
 
-        display_df["MCap"] = display_df["MCap"].map(lambda x: f"₹{x:,.0f}" if pd.notna(x) else "-")
-        for col in ["%Gain LW", "%Gain TW", "Δ Gain"]:
-            display_df[col] = pd.to_numeric(display_df[col], errors="coerce").round(1)
-
-        html_table = display_df.style.hide(axis="index").to_html(escape=False)
-        st.markdown(html_table, unsafe_allow_html=True)
-
-    render_table(rising, "📈 Stocks with Rising Momentum")
-    render_table(losing, "📉 Stocks Losing Momentum")
+    render_table(rising, "Stocks with Rising Momentum")
+    render_table(losing, "Stocks Losing Momentum")
 
 
 if __name__ == "__main__":

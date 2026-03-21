@@ -3,14 +3,17 @@ import streamlit as st
 from dateutil.relativedelta import relativedelta
 
 from db_utils import get_downfromhigh_data_for_date, get_downfromhigh_dates, get_historical_market_cap
+from grid_utils import render_interactive_table
 from views.bucket_view_utils import (
+    BUCKET_MAJOR_COLS,
+    BUCKET_ONE_DECIMAL_COLS,
+    BUCKET_TWO_DECIMAL_COLS,
     COMMON_RENAME_MAP,
     DETAILED_COLS,
     FOCUSED_COLS,
     compute_mcap_change,
-    highlight_valuation_gradient,
     load_first_caps,
-    prepare_display_df,
+    prepare_grid_df,
 )
 
 
@@ -206,21 +209,46 @@ def main():
                 header += f" | avg P/E {avg_group_pe:.1f}"
             st.markdown(f"#### {header}")
 
-            display_df = prepare_display_df(group_df, selected_cols, sort_by, SORT_OPTIONS, include_industry=True, rename_map=COMMON_RENAME_MAP)
-            styled_df = display_df.style.apply(highlight_valuation_gradient, axis=1)
-            st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+            render_interactive_table(
+                prepare_grid_df(
+                    group_df,
+                    selected_cols,
+                    sort_by,
+                    SORT_OPTIONS,
+                    include_industry=True,
+                    rename_map=COMMON_RENAME_MAP,
+                ),
+                columns=selected_cols,
+                key=f"deep_dippers_group_{industry}",
+                rename_map=COMMON_RENAME_MAP,
+                one_decimal_cols=BUCKET_ONE_DECIMAL_COLS,
+                two_decimal_cols=BUCKET_TWO_DECIMAL_COLS,
+                major_cols=BUCKET_MAJOR_COLS,
+                link_col="name",
+                height=320 if view_scope == "Focused" else 420,
+            )
 
     with list_tab:
-        use_styled = st.toggle("Use styled table", value=True)
-        display_df = prepare_display_df(filtered_df, selected_cols, sort_by, SORT_OPTIONS, include_industry=True, rename_map=COMMON_RENAME_MAP)
+        render_interactive_table(
+            prepare_grid_df(
+                filtered_df,
+                selected_cols,
+                sort_by,
+                SORT_OPTIONS,
+                include_industry=True,
+                rename_map=COMMON_RENAME_MAP,
+            ),
+            columns=selected_cols,
+            key="deep_dippers_list",
+            rename_map=COMMON_RENAME_MAP,
+            one_decimal_cols=BUCKET_ONE_DECIMAL_COLS,
+            two_decimal_cols=BUCKET_TWO_DECIMAL_COLS,
+            major_cols=BUCKET_MAJOR_COLS,
+            link_col="name",
+            height=520 if view_scope == "Focused" else 620,
+        )
 
-        if use_styled:
-            styled_df = display_df.style.apply(highlight_valuation_gradient, axis=1)
-            st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
-        else:
-            st.dataframe(display_df, use_container_width=True)
-
-    st.markdown("Green = lower valuation | Red = higher valuation")
+    st.caption("Tip: use column filters and multi-sort in the table headers for deep-value triage.")
     st.markdown("---")
     st.download_button(
         "Download CSV",

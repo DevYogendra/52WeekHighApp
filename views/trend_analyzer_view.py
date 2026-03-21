@@ -3,8 +3,9 @@
 import pandas as pd
 import streamlit as st
 
-from db_utils import add_screener_links, format_decimal_columns, format_major_columns, get_momentum_summary, get_latest_table_date
 from config import TABLE_HIGHS
+from db_utils import get_momentum_summary, get_latest_table_date
+from grid_utils import render_interactive_table
 
 
 def main():
@@ -34,12 +35,12 @@ def main():
     ).round(3)
 
     df = df[df["hits_7"] > 0].sort_values(by=["Trend Score", "Acceleration", "%_gain_mc"], ascending=[False, False, False])
-    df = add_screener_links(df)
 
     st.caption("Trend Score = 3×Hits 0-7D + 2×Hits 8-30D + 1×Hits 31-60D. Acceleration compares recent daily hit rate vs the prior 23 days.")
 
-    display_df = df[
-        [
+    render_interactive_table(
+        df,
+        columns=[
             "name",
             "industry",
             "market_cap",
@@ -50,21 +51,22 @@ def main():
             "Hits 31-60D",
             "Trend Score",
             "Acceleration",
-        ]
-    ].rename(
-        columns={
+        ],
+        key="trend_analyzer_main",
+        rename_map={
             "name": "Company",
             "industry": "Industry",
             "market_cap": "MCap",
             "first_market_cap": "First MCap",
             "%_gain_mc": "Gain %",
-        }
+        },
+        integer_cols=["Hits 0-7D", "Hits 8-30D", "Hits 31-60D", "Trend Score"],
+        one_decimal_cols=["%_gain_mc"],
+        two_decimal_cols=["Acceleration"],
+        major_cols=["market_cap", "first_market_cap"],
+        link_col="name",
+        height=520,
     )
-
-    display_df = format_major_columns(display_df, ["MCap", "First MCap"])
-    display_df = format_decimal_columns(display_df, one_decimal_cols=["Gain %"], two_decimal_cols=["Acceleration"])
-    html_table = display_df.style.hide(axis="index").to_html(escape=False)
-    st.markdown(html_table, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":

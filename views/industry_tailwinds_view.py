@@ -3,13 +3,8 @@
 import pandas as pd
 import streamlit as st
 
-from db_utils import add_screener_links, compute_industry_tailwind_stats, get_momentum_summary
-
-
-def _format_market_cap(value: float) -> str:
-    if pd.isna(value):
-        return "-"
-    return f"{value:,.0f}"
+from db_utils import compute_industry_tailwind_stats, get_momentum_summary
+from grid_utils import render_interactive_table
 
 
 def main():
@@ -44,10 +39,21 @@ def main():
         st.info("No industries match the selected filters.")
         return
 
-    summary_table = industry_counts.copy()
-    summary_table["Avg_Hits_7"] = summary_table["Avg_Hits_7"].round(2)
-    summary_table["Weighted_Gain_MCap"] = summary_table["Weighted_Gain_MCap"].map(lambda x: f"{x:.1f}%")
-    st.dataframe(summary_table, use_container_width=True, hide_index=True)
+    render_interactive_table(
+        industry_counts,
+        columns=["industry", "Momentum_Stocks", "Avg_Hits_7", "Weighted_Gain_MCap"],
+        key="industry_tailwinds_summary",
+        rename_map={
+            "industry": "Industry",
+            "Momentum_Stocks": "Stocks",
+            "Avg_Hits_7": "Avg Hits 7D",
+            "Weighted_Gain_MCap": "Weighted Gain %",
+        },
+        integer_cols=["Momentum_Stocks"],
+        one_decimal_cols=["Weighted_Gain_MCap"],
+        two_decimal_cols=["Avg_Hits_7"],
+        height=280,
+    )
 
     st.markdown("### Industry details")
     st.caption("Open any industry below to see the stocks behind the tailwind signal.")
@@ -69,22 +75,23 @@ def main():
             f"weighted gain {summary_row['Weighted_Gain_MCap']:.1f}%"
         )
 
-        detail_table = add_screener_links(industry_stocks)[
-            ["name", "hits_7", "hits_30", "hits_60", "%_gain_mc", "market_cap", "first_seen_date"]
-        ].rename(
-            columns={
-                "name": "Stock",
-                "hits_7": "Hits 7D",
-                "hits_30": "Hits 30D",
-                "hits_60": "Hits 60D",
-                "%_gain_mc": "Gain %",
-                "market_cap": "Market Cap",
-                "first_seen_date": "First Seen",
-            }
-        )
-        detail_table["Gain %"] = detail_table["Gain %"].map(lambda x: f"{x:.1f}%" if pd.notna(x) else "-")
-        detail_table["Market Cap"] = detail_table["Market Cap"].map(_format_market_cap)
-
         with st.expander(expander_label, expanded=False):
-            html_table = detail_table.style.hide(axis="index").to_html(escape=False)
-            st.markdown(html_table, unsafe_allow_html=True)
+            render_interactive_table(
+                industry_stocks,
+                columns=["name", "hits_7", "hits_30", "hits_60", "%_gain_mc", "market_cap", "first_seen_date"],
+                key=f"industry_tailwinds_{industry_name}",
+                rename_map={
+                    "name": "Stock",
+                    "hits_7": "Hits 7D",
+                    "hits_30": "Hits 30D",
+                    "hits_60": "Hits 60D",
+                    "%_gain_mc": "Gain %",
+                    "market_cap": "Market Cap",
+                    "first_seen_date": "First Seen",
+                },
+                integer_cols=["hits_7", "hits_30", "hits_60"],
+                one_decimal_cols=["%_gain_mc"],
+                major_cols=["market_cap"],
+                link_col="name",
+                height=260,
+            )

@@ -7,7 +7,8 @@ import pandas as pd
 import streamlit as st
 
 from config import CACHE_TTL, DB_PATH, TABLE_HIGHS
-from db_utils import add_screener_links, format_decimal_columns, format_major_columns, get_latest_table_date
+from db_utils import get_latest_table_date
+from grid_utils import render_interactive_table
 
 
 @st.cache_data(ttl=CACHE_TTL)
@@ -45,7 +46,6 @@ def fetch_emerging_winners(recent_days: int = 7, min_appearances: int = 2, min_g
     df["Market Cap Gain (%)"] = (
         (df["latest_market_cap"] - df["first_market_cap"]) * 100 / df["first_market_cap"]
     ).round(2)
-    df = add_screener_links(df)
     return df.rename(
         columns={
             "name": "Company",
@@ -77,8 +77,9 @@ def main():
         st.info("No emerging winners match the selected filters.")
         return
 
-    display_df = df[
-        [
+    render_interactive_table(
+        df,
+        columns=[
             "Company",
             "Industry",
             "First Seen",
@@ -86,12 +87,15 @@ def main():
             "Market Cap Then",
             "Market Cap Now",
             "Market Cap Gain (%)",
-        ]
-    ].copy()
-    display_df = format_major_columns(display_df, ["Market Cap Then", "Market Cap Now"])
-    display_df = format_decimal_columns(display_df, one_decimal_cols=["Market Cap Gain (%)"])
-    html_table = display_df.style.hide(axis="index").to_html(escape=False)
-    st.markdown(html_table, unsafe_allow_html=True)
+        ],
+        key="emerging_winners_main",
+        integer_cols=["Appearances"],
+        one_decimal_cols=["Market Cap Gain (%)"],
+        major_cols=["Market Cap Then", "Market Cap Now"],
+        link_col="Company",
+        height=460,
+        fit_columns=True,
+    )
 
 
 if __name__ == "__main__":

@@ -158,6 +158,22 @@ def format_decimal_columns(
     return formatted
 
 
+def format_integer_columns(
+    df: pd.DataFrame,
+    integer_cols: list[str] | None = None,
+) -> pd.DataFrame:
+    """Apply integer formatting to count-like display columns."""
+    formatted = df.copy()
+
+    for col in integer_cols or []:
+        if col in formatted.columns:
+            formatted[col] = pd.to_numeric(formatted[col], errors="coerce").map(
+                lambda value: "-" if pd.isna(value) else f"{int(value)}"
+            )
+
+    return formatted
+
+
 def compute_industry_tailwind_stats(df: pd.DataFrame) -> pd.DataFrame:
     """Aggregate industry stats using market-cap weighting to reduce small-cap outlier skew."""
     if df.empty or "industry" not in df.columns:
