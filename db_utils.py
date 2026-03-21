@@ -48,6 +48,20 @@ def get_downfromhigh_data_for_date(date_str: str) -> pd.DataFrame:
         st.error(f"Database error: {e}")
         return pd.DataFrame()
 
+
+@st.cache_data(ttl=CACHE_TTL)
+def get_latest_table_date(table_name: str) -> datetime.date | None:
+    """Return the latest date available in a source table."""
+    try:
+        with sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
+            row = conn.execute(f"SELECT MAX(date) FROM {table_name}").fetchone()
+        if not row or row[0] is None:
+            return None
+        return pd.to_datetime(row[0]).date()
+    except sqlite3.Error as e:
+        st.error(f"Database error fetching latest date from {table_name}: {e}")
+        return None
+
 # ----------------------------------------------------------------------
 # 🔗  Convenience: add clickable links for Screener.in
 # ----------------------------------------------------------------------
@@ -96,21 +110,58 @@ def _apply_standard_types(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def compute_industry_tailwind_stats(df: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate industry stats using market-cap weighting to reduce small-cap outlier skew."""
+    if df.empty or "industry" not in df.columns:
+        return pd.DataFrame()
+
+    working = df.copy()
+    working["hits_7"] = pd.to_numeric(working.get("hits_7"), errors="coerce")
+    working["%_gain_mc"] = pd.to_numeric(working.get("%_gain_mc"), errors="coerce")
+    working["market_cap"] = pd.to_numeric(working.get("market_cap"), errors="coerce")
+
+    def _weighted_gain(group: pd.DataFrame) -> float:
+        valid = group.dropna(subset=["%_gain_mc", "market_cap"])
+        valid = valid[valid["market_cap"] > 0]
+        if valid.empty:
+            return float("nan")
+        return (valid["%_gain_mc"] * valid["market_cap"]).sum() / valid["market_cap"].sum()
+
+    industry_stats = (
+        working.groupby("industry", dropna=False)
+        .agg(
+            count_stocks=("name", "count"),
+            avg_hits_7=("hits_7", "mean"),
+        )
+        .reset_index()
+    )
+    weighted_gain = (
+        working.groupby("industry", dropna=False)
+        .apply(_weighted_gain)
+        .rename("weighted_gain_mc")
+        .reset_index()
+    )
+
+    return industry_stats.merge(weighted_gain, on="industry", how="left")
+
+
 @st.cache_data(ttl=CACHE_TTL)
 def get_momentum_summary() -> pd.DataFrame:
     """Compute momentum summary with rolling hit counts (1 hour cache TTL)."""
     try:
-        today = datetime.date.today()
+        latest_date = get_latest_table_date(TABLE_HIGHS)
+        if latest_date is None:
+            return pd.DataFrame()
         with sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
             def _hit_counts(days: int) -> pd.DataFrame:
-                since = today - datetime.timedelta(days=days)
+                since = latest_date - datetime.timedelta(days=days - 1)
                 q = f"""
                     SELECT name, COUNT(*) AS hits_{days}
                     FROM {TABLE_HIGHS}
-                    WHERE date >= ?
+                    WHERE date BETWEEN ? AND ?
                     GROUP BY name
                 """
-                return pd.read_sql(q, conn, params=(since,)).set_index("name")
+                return pd.read_sql(q, conn, params=(since, latest_date)).set_index("name")
 
             # Rolling hit counts
             counts7  = _hit_counts(7)

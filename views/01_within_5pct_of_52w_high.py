@@ -11,16 +11,17 @@ from db_utils import (
 from matplotlib import cm
 from matplotlib.colors import Normalize, to_hex
 
+# from .exclusion_filter import render_exclusion_ui
+
 def highlight_valuation_gradient(row):
     def get_style(val, vmin, vmax):
         if pd.isna(val):
             return None
         norm = Normalize(vmin=vmin, vmax=vmax)
         cmap = cm.get_cmap('RdYlGn_r')
-        rgba = cmap(norm(min(val, vmax)))  # cap at vmax
+        rgba = cmap(norm(min(val, vmax)))
         bg_color = to_hex(rgba)
 
-        # Compute luminance for contrasting text color
         r, g, b = rgba[:3]
         luminance = 0.299 * r + 0.587 * g + 0.114 * b
         text_color = "#000000" if luminance > 0.6 else "#FFFFFF"
@@ -36,9 +37,6 @@ def highlight_valuation_gradient(row):
         else:
             styles.append("")
     return styles
-
-
-# from .exclusion_filter import render_exclusion_ui
 
 def compute_mcap_change(df):
     df = df.copy()
@@ -140,7 +138,11 @@ def main():
                 st.error("Missing 'name' column in daily data.")
                 return
 
-            daily_df.drop_duplicates(subset=['name'], inplace=True)
+            daily_df = (
+                daily_df.sort_values(["name", "date"])
+                .drop_duplicates(subset=["name"], keep="last")
+                .reset_index(drop=True)
+            )
 
             # STEP 1: Load historical data
             hist_df = get_historical_market_cap()

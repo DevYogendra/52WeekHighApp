@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from db_utils import get_persistence_scores, get_frequency_timeline, add_screener_links
+from db_utils import get_persistence_scores, get_frequency_timeline, add_screener_links, compute_industry_tailwind_stats
 
 
 def main():
@@ -67,21 +67,78 @@ def main():
 
     # Industry tailwind summary
     st.markdown("### Industry tailwind signals")
-    industry_stats = df.groupby("industry").agg(
-        count_stocks=("name", "count"),
-        avg_hits_7=("hits_7", "mean"),
-        avg_persistence=("persistence_score", "mean"),
-        avg_gain_mc=("%_gain_mc", "mean")
-    ).reset_index()
+    industry_stats = compute_industry_tailwind_stats(df)
+    avg_persistence = (
+        df.groupby("industry", dropna=False)["persistence_score"]
+        .mean()
+        .rename("avg_persistence")
+        .reset_index()
+    )
+    industry_stats = industry_stats.merge(avg_persistence, on="industry", how="left")
 
     industry_stats["tailwind_score"] = (
         industry_stats["avg_persistence"] * 0.5 +
         industry_stats["avg_hits_7"] * 0.3 +
-        (industry_stats["avg_gain_mc"].fillna(0) / 100) * 0.2
+        (industry_stats["weighted_gain_mc"].fillna(0) / 100) * 0.2
     )
 
     industry_stats = industry_stats.sort_values(by="tailwind_score", ascending=False)
-    st.dataframe(industry_stats.style.format({"avg_hits_7": "{:.2f}", "avg_persistence": "{:.2f}", "avg_gain_mc": "{:.2f}", "tailwind_score": "{:.2f}"}))
+    st.dataframe(
+        industry_stats.rename(
+            columns={
+                "industry": "Industry",
+                "count_stocks": "Stocks",
+                "avg_hits_7": "Avg Hits 7D",
+                "avg_persistence": "Avg Persistence",
+                "weighted_gain_mc": "Weighted Gain %",
+                "tailwind_score": "Tailwind Score",
+            }
+        ).style.format(
+            {
+                "Avg Hits 7D": "{:.2f}",
+                "Avg Persistence": "{:.2f}",
+                "Weighted Gain %": "{:.2f}",
+                "Tailwind Score": "{:.2f}",
+            }
+        )
+    )
+    st.caption("Open an industry below to see the stocks behind the tailwind signal.")
+
+    for industry_name in industry_stats["industry"].dropna().tolist():
+        industry_df = (
+            df[df["industry"] == industry_name]
+            .copy()
+            .sort_values(by=["persistence_score", "hits_7", "%_gain_mc"], ascending=[False, False, False])
+        )
+        if industry_df.empty:
+            continue
+
+        summary_row = industry_stats[industry_stats["industry"] == industry_name].iloc[0]
+        expander_label = (
+            f"{industry_name} | "
+            f"{int(summary_row['count_stocks'])} stocks | "
+            f"avg persistence {summary_row['avg_persistence']:.1f} | "
+            f"weighted gain {summary_row['weighted_gain_mc']:.1f}%"
+        )
+
+        detail_table = industry_df[
+            ["name", "hits_7", "hits_30", "hits_60", "%_gain_mc", "persistence_score"]
+        ].rename(
+            columns={
+                "name": "Stock",
+                "hits_7": "Hits 7D",
+                "hits_30": "Hits 30D",
+                "hits_60": "Hits 60D",
+                "%_gain_mc": "Gain %",
+                "persistence_score": "Persistence Score",
+            }
+        )
+
+        with st.expander(expander_label, expanded=False):
+            html_table = detail_table.style.format(
+                {"Gain %": "{:.2f}", "Persistence Score": "{:.2f}"}
+            ).hide(axis="index").to_html(escape=False)
+            st.markdown(html_table, unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown(
