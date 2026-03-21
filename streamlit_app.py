@@ -1,4 +1,5 @@
 import importlib
+import os
 from pathlib import Path
 
 import streamlit as st
@@ -25,20 +26,20 @@ page_options = {
     "Big Dippers (50%+ Down)": "deep_dippers_view",
 }
 
-doc_pages = {
-    "📚 Help Hub": "help_hub",
-    "🚀 Quick Start": "help_quick_start",
-    "📖 How to Read": "help_interpretation",
-    "📚 Glossary": "help_glossary",
+doc_info = {
+    "📚 Help Hub": "HTML_DOCUMENTATION_SUITE_README.md",
+    "🚀 Quick Start": "QUICK_START.md",
+    "📖 How to Read": "INTERPRETATION_GUIDE.md",
+    "📚 Glossary": "GLOSSARY.md",
 }
 
 # Sidebar navigation
 st.sidebar.title("Navigation")
 st.sidebar.subheader("Help & Documentation", divider="gray")
 
-doc_selection = st.sidebar.radio("Documentation", ["None"] + list(doc_pages.keys()), key="doc_radio", label_visibility="collapsed")
+doc_selection = st.sidebar.radio("Documentation", ["None"] + list(doc_info.keys()), key="doc_radio", label_visibility="collapsed")
 if doc_selection != "None":
-    st.session_state.current_doc = doc_pages[doc_selection]
+    st.session_state.current_doc = doc_info[doc_selection]
     st.session_state.current_page = None
 else:
     st.session_state.current_doc = None
@@ -50,45 +51,30 @@ page_selection = st.sidebar.radio("Go to", list(page_options.keys()), key="page_
 st.session_state.current_page = page_selection
 st.session_state.current_doc = None
 
-# Helper function to display documentation
-@st.cache_data
-def load_doc_file(page_type):
-    """Load and cache documentation files"""
-    import os
-    
-    # Get the directory of the current script
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    docs_dir = os.path.join(current_dir, "docs")
-    
-    file_mapping = {
-        "help_hub": os.path.join(docs_dir, "HTML_DOCUMENTATION_SUITE_README.md"),
-        "help_quick_start": os.path.join(docs_dir, "QUICK_START.md"),
-        "help_interpretation": os.path.join(docs_dir, "INTERPRETATION_GUIDE.md"),
-        "help_glossary": os.path.join(docs_dir, "GLOSSARY.md"),
-    }
-    
-    html_file = file_mapping.get(page_type)
-    if html_file and os.path.exists(html_file):
-        with open(html_file, "r", encoding="utf-8") as f:
-            return f.read()
-    return None
-
-def display_help_page(page_type):
-    """Display documentation pages"""
-    content = load_doc_file(page_type)
-    
-    if content:
-        st.markdown(content)
-    else:
-        st.error(f"Documentation file not found for: {page_type}")
-
-# Route to appropriate page
+# Display content based on selection
 if st.session_state.current_doc:
-    display_help_page(st.session_state.current_doc)
-elif st.session_state.current_page:
-    selected_module_name = page_options[st.session_state.current_page]
-    module = importlib.import_module(f"views.{selected_module_name}")
-    if hasattr(module, "main"):
-        module.main()
+    # Load and display documentation
+    doc_filename = st.session_state.current_doc
+    doc_path = os.path.join(os.path.dirname(__file__), "docs", doc_filename)
+    
+    if os.path.exists(doc_path):
+        with open(doc_path, "r", encoding="utf-8") as f:
+            doc_content = f.read()
+        st.markdown(doc_content)
     else:
-        st.error(f"Module `{selected_module_name}` does not have a `main()` function.")
+        st.error(f"📄 Documentation file not found: {doc_filename}")
+        st.info(f"Looking for file at: {doc_path}")
+
+elif st.session_state.current_page:
+    # Load and display main view
+    try:
+        selected_module_name = page_options[st.session_state.current_page]
+        module = importlib.import_module(f"views.{selected_module_name}")
+        if hasattr(module, "main"):
+            module.main()
+        else:
+            st.error(f"Module `{selected_module_name}` does not have a `main()` function.")
+    except Exception as e:
+        st.error(f"Error loading view: {str(e)}")
+else:
+    st.info("👈 Select a view from the sidebar to get started.")
