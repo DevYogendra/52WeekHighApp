@@ -2,7 +2,6 @@ import importlib
 from pathlib import Path
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 st.set_page_config(page_title="52-Week High Tracker", layout="wide")
 
@@ -51,10 +50,10 @@ page_selection = st.sidebar.radio("Go to", list(page_options.keys()), key="page_
 st.session_state.current_page = page_selection
 st.session_state.current_doc = None
 
-# Helper function to display HTML documentation
-@st.cache_resource
-def load_html_file(page_type):
-    """Load and cache HTML documentation pages"""
+# Helper function to display documentation
+@st.cache_data
+def load_doc_file(page_type):
+    """Load and cache documentation files"""
     import os
     
     # Get the directory of the current script
@@ -62,10 +61,10 @@ def load_html_file(page_type):
     docs_dir = os.path.join(current_dir, "docs")
     
     file_mapping = {
-        "help_hub": os.path.join(docs_dir, "index.html"),
-        "help_quick_start": os.path.join(docs_dir, "quick-start.html"),
-        "help_interpretation": os.path.join(docs_dir, "interpretation-guide.html"),
-        "help_glossary": os.path.join(docs_dir, "glossary.html"),
+        "help_hub": os.path.join(docs_dir, "HTML_DOCUMENTATION_SUITE_README.md"),
+        "help_quick_start": os.path.join(docs_dir, "QUICK_START.md"),
+        "help_interpretation": os.path.join(docs_dir, "INTERPRETATION_GUIDE.md"),
+        "help_glossary": os.path.join(docs_dir, "GLOSSARY.md"),
     }
     
     html_file = file_mapping.get(page_type)
@@ -75,11 +74,11 @@ def load_html_file(page_type):
     return None
 
 def display_help_page(page_type):
-    """Display HTML documentation pages"""
-    html_content = load_html_file(page_type)
+    """Display documentation pages"""
+    content = load_doc_file(page_type)
     
-    if html_content:
-        components.html(html_content, height=900, scrolling=True)
+    if content:
+        st.markdown(content)
     else:
         st.error(f"Documentation file not found for: {page_type}")
 
