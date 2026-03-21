@@ -188,7 +188,7 @@ def main():
 ```
 1. User clicks radio button in sidebar (e.g., "Within 5% of 52W High")
 2. streamlit_app.py extracts selected module name
-3. importlib.import_module("views.01_within_5pct_of_52w_high")
+3. importlib.import_module("views.near_52w_high_view")
 4. Calls module.main()
 5. View queries database → db_utils.get_data_for_date()
 6. Database returns data (or error → st.error() shown)

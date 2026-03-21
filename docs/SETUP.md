@@ -435,7 +435,7 @@ python run_vacuum.py
 
 **Cause:** Data type mismatch in styling functions (P/E or P/BV are strings)
 
-**Solution:** Already fixed in code, but ensure `views/03_big_dippers_50pct_plus_down.py` has try-except:
+**Solution:** Already fixed in code, but ensure `views/deep_dippers_view.py` has try-except:
 ```python
 try:
     val = float(val)  # Convert string to numeric
@@ -528,14 +528,14 @@ pytest tests/
 ├── requirements.txt         # Dependencies
 ├── highs.db                 # Database (created at runtime)
 ├── views/                   # View modules (add new views here)
-│   ├── 01_within_5pct_of_52w_high.py
-│   ├── 02_five_to_fifty_pct_from_52w_high.py
-│   ├── 03_big_dippers_50pct_plus_down.py
-│   ├── trend_shift.py
-│   ├── emerging_winners.py
-│   ├── trend_analyzer.py
-│   ├── industry_tailwinds.py
-│   └── momentum_summary.py
+│   ├── near_52w_high_view.py
+│   ├── pullback_candidates_view.py
+│   ├── deep_dippers_view.py
+│   ├── trend_shift_view.py
+│   ├── emerging_winners_view.py
+│   ├── trend_analyzer_view.py
+│   ├── industry_tailwinds_view.py
+│   └── momentum_summary_view.py
 ├── docs/                    # Documentation
 │   ├── README.md
 │   ├── ARCHITECTURE.md

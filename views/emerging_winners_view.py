@@ -1,4 +1,4 @@
-# views/emerging_winners.py
+# views/emerging_winners_view.py
 
 import datetime
 import sqlite3
@@ -7,7 +7,7 @@ import pandas as pd
 import streamlit as st
 
 from config import CACHE_TTL, DB_PATH, TABLE_HIGHS
-from db_utils import add_screener_links, get_latest_table_date
+from db_utils import add_screener_links, format_decimal_columns, format_major_columns, get_latest_table_date
 
 
 @st.cache_data(ttl=CACHE_TTL)
@@ -88,7 +88,9 @@ def main():
             "Market Cap Gain (%)",
         ]
     ].copy()
-    html_table = display_df.style.format({"Market Cap Gain (%)": "{:.2f}"}).hide(axis="index").to_html(escape=False)
+    display_df = format_major_columns(display_df, ["Market Cap Then", "Market Cap Now"])
+    display_df = format_decimal_columns(display_df, one_decimal_cols=["Market Cap Gain (%)"])
+    html_table = display_df.style.hide(axis="index").to_html(escape=False)
     st.markdown(html_table, unsafe_allow_html=True)
 
 

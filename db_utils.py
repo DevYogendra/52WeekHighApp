@@ -110,6 +110,54 @@ def _apply_standard_types(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def format_major_value(value):
+    """Format large financial figures for cleaner display."""
+    if pd.isna(value):
+        return "-"
+
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return value
+
+    abs_value = abs(value)
+    if abs_value >= 1:
+        return f"{value:,.0f}"
+    return f"{value:,.2f}"
+
+
+def format_major_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    """Apply human-friendly formatting to large-value columns."""
+    formatted = df.copy()
+    for col in columns:
+        if col in formatted.columns:
+            formatted[col] = formatted[col].map(format_major_value)
+    return formatted
+
+
+def format_decimal_columns(
+    df: pd.DataFrame,
+    one_decimal_cols: list[str] | None = None,
+    two_decimal_cols: list[str] | None = None,
+) -> pd.DataFrame:
+    """Apply consistent decimal precision to display columns."""
+    formatted = df.copy()
+
+    for col in one_decimal_cols or []:
+        if col in formatted.columns:
+            formatted[col] = pd.to_numeric(formatted[col], errors="coerce").map(
+                lambda value: "-" if pd.isna(value) else f"{value:.1f}"
+            )
+
+    for col in two_decimal_cols or []:
+        if col in formatted.columns:
+            formatted[col] = pd.to_numeric(formatted[col], errors="coerce").map(
+                lambda value: "-" if pd.isna(value) else f"{value:.2f}"
+            )
+
+    return formatted
+
+
 def compute_industry_tailwind_stats(df: pd.DataFrame) -> pd.DataFrame:
     """Aggregate industry stats using market-cap weighting to reduce small-cap outlier skew."""
     if df.empty or "industry" not in df.columns:

@@ -8,7 +8,7 @@ This document details the workflow and business logic for each view in the 52-We
 
 ## View 1: Within 5% of 52W High
 
-**File:** `views/01_within_5pct_of_52w_high.py`
+**File:** `views/near_52w_high_view.py`
 
 **Purpose:** Identify stocks trading near their 52-week peaks—potential breakout candidates with momentum.
 
@@ -119,7 +119,7 @@ st.markdown(HTML)
 
 ## View 2: 5–50% from 52W High
 
-**File:** `views/02_five_to_fifty_pct_from_52w_high.py`
+**File:** `views/pullback_candidates_view.py`
 
 **Purpose:** Stocks that have corrected 5-50% from highs—balanced between pull back and recovery potential.
 
@@ -150,7 +150,7 @@ View 3: Stocks VERY FAR from 52W high (50%+ correction)
 
 ## View 3: Big Dippers (50%+ Down)
 
-**File:** `views/03_big_dippers_50pct_plus_down.py`
+**File:** `views/deep_dippers_view.py`
 
 **Purpose:** Deep value opportunities or distressed securities (down 50%+).
 
@@ -193,7 +193,7 @@ Type conversion issue fixed:
 
 ## View 4: Trend Shift Analyzer
 
-**File:** `views/trend_shift.py`
+**File:** `views/trend_shift_view.py`
 
 **Purpose:** Week-over-week momentum changes—identify accelerating or decelerating trends.
 
@@ -277,7 +277,7 @@ gain_delta (Δ Gain)  | this - last (positive = acceleration)
 
 ## View 5: Emerging Winners
 
-**File:** `views/emerging_winners.py`
+**File:** `views/emerging_winners_view.py`
 
 **Purpose:** Identify momentum accelerators with rising valuations (high growth potential).
 
@@ -309,7 +309,7 @@ Ranked by composite "momentum score"
 
 ## View 6: Trend Analyzer
 
-**File:** `views/trend_analyzer.py`
+**File:** `views/trend_analyzer_view.py`
 
 **Purpose:** Long-term trend analysis with market cap evolution and valuation.
 
@@ -361,7 +361,7 @@ Ranked by composite "momentum score"
 
 ## View 7: Industry Tailwinds
 
-**File:** `views/industry_tailwinds.py`
+**File:** `views/industry_tailwinds_view.py`
 
 **Purpose:** Sector-level analysis of momentum trends.
 
@@ -418,7 +418,7 @@ Cold Industries (few highs, negative growth):
 
 ## View 8: Momentum Summary
 
-**File:** `views/momentum_summary.py`
+**File:** `views/momentum_summary_view.py`
 
 **Purpose:** Snapshot of which stocks appear most frequently in 52W highs.
 

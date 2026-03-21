@@ -1,4 +1,4 @@
-# views/industry_tailwinds.py
+# views/industry_tailwinds_view.py
 
 import pandas as pd
 import streamlit as st

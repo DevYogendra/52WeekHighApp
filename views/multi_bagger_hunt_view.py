@@ -1,7 +1,14 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from db_utils import get_persistence_scores, get_frequency_timeline, add_screener_links, compute_industry_tailwind_stats
+from db_utils import (
+    add_screener_links,
+    compute_industry_tailwind_stats,
+    format_decimal_columns,
+    format_major_columns,
+    get_frequency_timeline,
+    get_persistence_scores,
+)
 
 
 def main():
@@ -52,8 +59,13 @@ def main():
     df["name_text"] = df["name"].str.replace(r"<[^>]*>", "", regex=True).astype("string")
 
     st.markdown("### Top multi-bagger candidates")
-    show_cols = ["name", "industry", "hits_7", "hits_30", "hits_60", "%_gain_mc", "persistence_score"]
-    html_table = df[show_cols].sort_values(by="persistence_score", ascending=False).style.format({"%_gain_mc": "{:.2f}", "persistence_score": "{:.2f}"}).to_html(index=False, escape=False)
+    show_cols = ["name", "industry", "market_cap_cr", "hits_7", "hits_30", "hits_60", "%_gain_mc", "persistence_score"]
+    display_df = df[show_cols].sort_values(by="persistence_score", ascending=False).rename(
+        columns={"market_cap_cr": "MCap (Cr)"}
+    )
+    display_df = format_major_columns(display_df, ["MCap (Cr)"])
+    display_df = format_decimal_columns(display_df, one_decimal_cols=["%_gain_mc"], two_decimal_cols=["persistence_score"])
+    html_table = display_df.to_html(index=False, escape=False)
     st.markdown(html_table, unsafe_allow_html=True)
 
     top_stock = st.selectbox("Select stock for frequency timeline", options=df["name_text"].tolist())

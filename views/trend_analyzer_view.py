@@ -1,9 +1,9 @@
-# views/trend_analyzer.py
+# views/trend_analyzer_view.py
 
 import pandas as pd
 import streamlit as st
 
-from db_utils import add_screener_links, get_momentum_summary, get_latest_table_date
+from db_utils import add_screener_links, format_decimal_columns, format_major_columns, get_momentum_summary, get_latest_table_date
 from config import TABLE_HIGHS
 
 
@@ -61,8 +61,8 @@ def main():
         }
     )
 
-    numeric_cols = display_df.select_dtypes(include="number").columns
-    display_df[numeric_cols] = display_df[numeric_cols].round(2)
+    display_df = format_major_columns(display_df, ["MCap", "First MCap"])
+    display_df = format_decimal_columns(display_df, one_decimal_cols=["Gain %"], two_decimal_cols=["Acceleration"])
     html_table = display_df.style.hide(axis="index").to_html(escape=False)
     st.markdown(html_table, unsafe_allow_html=True)
 

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from db_utils import get_momentum_summary, get_historical_market_cap, add_screener_links
+from db_utils import add_screener_links, format_decimal_columns, format_major_columns, get_historical_market_cap, get_momentum_summary
 from plot_utils import market_cap_line_chart
 
 def main():
@@ -74,16 +74,16 @@ def main():
             st.markdown(f"#### 🏷️ {group_name} ({len(group_df)} companies)")
             display_df = group_df[display_cols].copy()
             display_df = add_screener_links(display_df)
-            numeric_cols = display_df.select_dtypes(include="number").columns
-            display_df[numeric_cols] = display_df[numeric_cols].round(2)
             display_df = display_df.rename(columns=rename_map)
+            display_df = format_major_columns(display_df, ["MCap", "First MCap"])
+            display_df = format_decimal_columns(display_df, one_decimal_cols=["Î”% MCap"])
             st.markdown(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
     else:
         display_df = filtered_df[["industry"] + display_cols].copy()
         display_df = add_screener_links(display_df)
-        numeric_cols = display_df.select_dtypes(include="number").columns
-        display_df[numeric_cols] = display_df[numeric_cols].round(2)
         display_df = display_df.rename(columns=rename_map)
+        display_df = format_major_columns(display_df, ["MCap", "First MCap"])
+        display_df = format_decimal_columns(display_df, one_decimal_cols=["Î”% MCap"])
         st.markdown(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
     # --- Download -------------------------------------------------------

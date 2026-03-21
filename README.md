@@ -54,14 +54,14 @@ The app will open at `http://localhost:8501`
 ├── requirements.txt         # Python dependencies
 ├── highs.db                 # SQLite database
 ├── views/                   # Page modules
-│   ├── 01_within_5pct_of_52w_high.py
-│   ├── 02_five_to_fifty_pct_from_52w_high.py
-│   ├── 03_big_dippers_50pct_plus_down.py
-│   ├── trend_shift.py
-│   ├── emerging_winners.py
-│   ├── trend_analyzer.py
-│   ├── industry_tailwinds.py
-│   └── momentum_summary.py
+│   ├── near_52w_high_view.py
+│   ├── pullback_candidates_view.py
+│   ├── deep_dippers_view.py
+│   ├── trend_shift_view.py
+│   ├── emerging_winners_view.py
+│   ├── trend_analyzer_view.py
+│   ├── industry_tailwinds_view.py
+│   └── momentum_summary_view.py
 └── docs/                    # Documentation
     ├── ARCHITECTURE.md
     ├── WORKFLOWS.md

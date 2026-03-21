@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from config import TABLE_HIGHS
-from db_utils import add_screener_links, get_historical_market_cap, get_latest_table_date
+from db_utils import add_screener_links, format_decimal_columns, get_historical_market_cap, get_latest_table_date
 
 
 def get_week_range(date):

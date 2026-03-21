@@ -1,21 +1,22 @@
-import streamlit as st
-from pathlib import Path
 import importlib
+
+import streamlit as st
 
 st.set_page_config(page_title="52-Week High Tracker", layout="wide")
 
 # Sidebar navigation
-st.sidebar.title("📊 Navigation")
+st.sidebar.title("Navigation")
 page_options = {
-    "📈 Within 5% of 52W High": "01_within_5pct_of_52w_high",
-    "📉 5–50% from 52W High": "02_five_to_fifty_pct_from_52w_high",    
-    "📉 Big Dippers (50%+ Down)": "03_big_dippers_50pct_plus_down",        
-    "📊 Trend Shift Analyzer": "trend_shift",
-    "🔥 Emerging Winners": "emerging_winners",
-    "📈 Trend Analyzer": "trend_analyzer",
-    "🌪️ Industry Tailwinds": "industry_tailwinds",
-    "📈 Momentum Summary": "momentum_summary",
-    "🏹 Multi-Bagger Hunt": "multi_bagger_hunt",
+    "Start Here": "start_here_view",
+    "Trend Analyzer": "trend_analyzer_view",
+    "Trend Shift Analyzer": "trend_shift_view",
+    "Industry Tailwinds": "industry_tailwinds_view",
+    "Emerging Winners": "emerging_winners_view",
+    "Momentum Summary": "momentum_summary_view",
+    "Multi-Bagger Hunt": "multi_bagger_hunt_view",
+    "Within 5% of 52W High": "near_52w_high_view",
+    "5-50% from 52W High": "pullback_candidates_view",
+    "Big Dippers (50%+ Down)": "deep_dippers_view",
 }
 
 page_selection = st.sidebar.radio("Go to", list(page_options.keys()))
