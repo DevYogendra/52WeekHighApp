@@ -229,7 +229,7 @@ def main():
 
     with grouped_tab:
         grouped = (
-            filtered_df.fillna("")
+            filtered_df.assign(industry=filtered_df["industry"].fillna("Unknown"))
             .sort_values(["industry", "market_cap"], ascending=[True, False])
             .groupby("industry")
         )

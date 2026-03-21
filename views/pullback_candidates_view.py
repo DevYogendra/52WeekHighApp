@@ -76,6 +76,12 @@ def main():
         selected_dates_str = [d.strftime("%Y-%m-%d") for d in dates if start_date <= d <= end_date]
         dfs = [get_fivetofiftyclub_data_for_date(d_str) for d_str in selected_dates_str]
         daily_df = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+        if not daily_df.empty and "name" in daily_df.columns and "date" in daily_df.columns:
+            daily_df = (
+                daily_df.sort_values(["name", "date"])
+                .drop_duplicates(subset=["name"], keep="last")
+                .reset_index(drop=True)
+            )
     else:
         all_dates_str = [d.strftime("%Y-%m-%d") for d in dates]
         dfs = [get_fivetofiftyclub_data_for_date(d_str) for d_str in all_dates_str]
@@ -185,7 +191,7 @@ def main():
 
     with grouped_tab:
         grouped = (
-            filtered_df.fillna("")
+            filtered_df.assign(industry=filtered_df["industry"].fillna("Unknown"))
             .sort_values(["industry", "market_cap"], ascending=[True, False])
             .groupby("industry")
         )
