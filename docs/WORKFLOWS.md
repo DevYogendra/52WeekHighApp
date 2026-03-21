@@ -501,6 +501,272 @@ No. of Hits > Market Cap correlation:
 
 ---
 
+## View 9: Multi-Bagger Hunt
+
+**File:** `views/multi_bagger_hunt_view.py`
+
+**Purpose:** Rank stocks by persistence in 52-week highs—identify potential multi-baggers.
+
+### Workflow
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  1. CALCULATE PERSISTENCE SCORES                         │
+├──────────────────────────────────────────────────────────┤
+│  For EACH stock:                                         │
+│  ├─ Count total appearances in highs table              │
+│  ├─ Weight recent appearances (7-day) higher            │
+│  ├─ Calculate acceleration (trend direction)            │
+│  └─ Compute persistence_score = weighted frequency      │
+└──────────────────────────────────────────────────────────┘
+                      ↓
+┌──────────────────────────────────────────────────────────┐
+│  2. GATHER MARKET DATA                                   │
+├──────────────────────────────────────────────────────────┤
+│  • Current market cap                                    │
+│  • First market cap (when first seen in highs)          │
+│  • First seen date                                       │
+│  • Industry classification                              │
+│  • Frequency timeline (hits over last 12 weeks)         │
+└──────────────────────────────────────────────────────────┘
+                      ↓
+┌──────────────────────────────────────────────────────────┐
+│  3. APPLY FILTERS                                        │
+├──────────────────────────────────────────────────────────┤
+│  • Minimum hits in 7 days (e.g., 2+)                    │
+│  • Minimum persistence score (e.g., 20+)               │
+│  • Market cap range (sidebar slider)                    │
+│  • Industry filter (optional)                           │
+└──────────────────────────────────────────────────────────┘
+                      ↓
+┌──────────────────────────────────────────────────────────┐
+│  4. DISPLAY CANDIDATES                                   │
+├──────────────────────────────────────────────────────────┤
+│  • Ranked by persistence score (descending)            │
+│  • Show frequency timeline chart (12-week history)      │
+│  • Interactive grid with:                               │
+│    ├─ Company name (with screener link)                │
+│    ├─ Industry                                          │
+│    ├─ Hits 7D / 30D (frequency metrics)                │
+│    ├─ Persistence Score (composite metric)             │
+│    ├─ Market cap                                        │
+│    └─ Appreciation %                                    │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Key Concept
+
+**Persistence Score** = Measure of how consistently a stock appears in 52W highs
+
+```
+High Persistence + Recent Acceleration = Potential Multi-Bagger
+├─ Proven track record in 52W highs
+├─ Momentum accelerating (more hits recently)
+└─ Early stages of potential significant rally
+```
+
+### Use Cases
+
+```
+Use this view to find:
+✓ Stocks with proven high momentum (persistent winners)
+✓ Companies accelerating momentum (rising from baseline)
+✓ Quality stocks at inflection points (ready to run)
+✓ Candidates for medium to long-term holding
+```
+
+---
+
+## View 10: Trend Analyzer (Consistent Performers)
+
+**File:** `views/trend_analyzer_view.py`
+
+**Purpose:** Identify consistent performers using non-overlapping time buckets.
+
+### Workflow
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  1. CALCULATE FREQUENCY BUCKETS                          │
+├──────────────────────────────────────────────────────────┤
+│  For EACH company:                                       │
+│  ├─ Hits 0-7D   = appearances in last 7 days           │
+│  ├─ Hits 8-30D  = appearances in days 8-30 (no overlap)│
+│  └─ Hits 31-60D = appearances in days 31-60 (no overlap)│
+│                                                          │
+│  This shows trend direction:                            │
+│  ├─ If Hits 0-7D > Hits 8-30D → ACCELERATING ✓        │
+│  └─ If Hits 0-7D < Hits 8-30D → DECELERATING ✗        │
+└──────────────────────────────────────────────────────────┘
+                      ↓
+┌──────────────────────────────────────────────────────────┐
+│  2. COMPUTE TREND SCORE                                  │
+├──────────────────────────────────────────────────────────┤
+│  Trend Score = (Hits 0-7D × 3) +                        │
+│                (Hits 8-30D × 2) +                       │
+│                (Hits 31-60D × 1)                        │
+│                                                          │
+│  Rationale: Weight recent hits more heavily            │
+│  ├─ Recent weeks = 3x multiplier (highest importance)  │
+│  ├─ Medium weeks = 2x multiplier                       │
+│  └─ Older weeks = 1x multiplier (baseline)             │
+└──────────────────────────────────────────────────────────┘
+                      ↓
+┌──────────────────────────────────────────────────────────┐
+│  3. COMPUTE ACCELERATION                                 │
+├──────────────────────────────────────────────────────────┤
+│  Acceleration = (Hits 0-7D ÷ 7) - (Hits 8-30D ÷ 23)   │
+│                                                          │
+│  Daily comparison:                                       │
+│  ├─ Positive = stock getting hits more frequently now  │
+│  ├─ Negative = getting hits less frequently than before│
+│  └─ Used as secondary sort criterion                   │
+└──────────────────────────────────────────────────────────┘
+                      ↓
+┌──────────────────────────────────────────────────────────┐
+│  4. FILTER & SORT                                        │
+├──────────────────────────────────────────────────────────┤
+│  • Filter: hits_7 > 0 (must have recent activity)       │
+│  • Primary sort: Trend Score (descending)               │
+│  • Secondary sort: Acceleration (descending)            │
+│  • Tertiary sort: % Gain (descending)                   │
+└──────────────────────────────────────────────────────────┘
+                      ↓
+┌──────────────────────────────────────────────────────────┐
+│  5. DISPLAY RESULTS                                      │
+├──────────────────────────────────────────────────────────┤
+│  • Interactive grid with:                               │
+│    ├─ Company name (screener link)                      │
+│    ├─ Industry                                          │
+│    ├─ Market Cap (colored by magnitude)                │
+│    ├─ Hits 0-7D / 8-30D / 31-60D (colored bars)       │
+│    ├─ Trend Score (composite metric)                   │
+│    ├─ Acceleration (trend direction)                   │
+│    └─ % Market Cap Gain                                │
+│                                                          │
+│  • Explanation caption with formula                    │
+│  • Threshold: Only stocks with recent hits shown       │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Key Metrics Explained
+
+```
+Trend Score (0 to ∞):
+  Higher = More frequent recent appearances in highs
+  ~10+ = High confidence consistent performer
+  ~5-10 = Moderate consistency
+  ~1-5 = Lower consistency
+
+Acceleration (-∞ to +∞):
+  Positive = Momentum accelerating
+  Negative = Momentum decelerating
+  Near 0 = Steady state (no acceleration)
+
+Example:
+  Stock A: Hits 0-7D=5, 8-30D=2, 31-60D=1
+  Score = (5×3) + (2×2) + (1×1) = 20
+  Acceleration = (5÷7) - (2÷23) ≈ 0.624 (accelerating)
+
+  Stock B: Hits 0-7D=1, 8-30D=5, 31-60D=3
+  Score = (1×3) + (5×2) + (3×1) = 16
+  Acceleration = (1÷7) - (5÷23) ≈ -0.142 (decelerating)
+  → Stock A ranked higher (better score + accelerating)
+```
+
+---
+
+## View 11: Start Here
+
+**File:** `views/start_here_view.py`
+
+**Purpose:** Dashboard overview and getting started guide for new users.
+
+### Workflow
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  1. DASHBOARD INITIALIZATION                             │
+├──────────────────────────────────────────────────────────┤
+│  • Display welcome message                              │
+│  • Show last data update timestamp                      │
+│  • Provide getting started instructions                 │
+└──────────────────────────────────────────────────────────┘
+                      ↓
+┌──────────────────────────────────────────────────────────┐
+│  2. DISPLAY KEY METRICS                                  │
+├──────────────────────────────────────────────────────────┤
+│  • Total companies in 52W highs (all-time)              │
+│  • Companies this week (recent)                          │
+│  • Most common industries (sector focus)                │
+│  • Top performers (by market cap appreciation)          │
+└──────────────────────────────────────────────────────────┘
+                      ↓
+┌──────────────────────────────────────────────────────────┐
+│  3. SHOW KEY SNAPSHOTS                                   │
+├──────────────────────────────────────────────────────────┤
+│  Tab 1: Trend Shift Snapshot                            │
+│  ├─ Companies accelerating this week                    │
+│  ├─ Top 5-8 rising stocks                               │
+│  └─ Compare vs last week                                │
+│                                                          │
+│  Tab 2: Emerging Winners                                │
+│  ├─ New entrants with momentum                          │
+│  ├─ Showing strong gains                                │
+│  └─ High growth potential candidates                    │
+│                                                          │
+│  Tab 3: Industry Rotation                               │
+│  ├─ Hot industries this week                            │
+│  ├─ Cold industries (potential shorts)                  │
+│  └─ Sector momentum shifts                              │
+└──────────────────────────────────────────────────────────┘
+                      ↓
+┌──────────────────────────────────────────────────────────┐
+│  4. DISPLAY NAVIGATION GUIDE                             │
+├──────────────────────────────────────────────────────────┤
+│ Explain each page in sidebar:                            │
+│  • How to use each view                                 │
+│  • What questions each answers                          │
+│  • Typical investment workflows                         │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Key Content Sections
+
+```
+1. INTRODUCTION
+   "Welcome to 52-Week High Tracker"
+   → Explain what the app does
+   → Show how to interpret the data
+
+2. QUICK START TABS
+   ├─ Trend Shift: What's accelerating NOW
+   ├─ Emerging Winners: New high-momentum stocks
+   └─ Industry Tailwinds: Sector rotation trends
+
+3. NAVIGATION GUIDE
+   Each page explained with:
+   • Title and emoji
+   • What it shows
+   • How to interpret results
+   • Best use cases
+
+4. HELP & DEFINITIONS
+   • What = 52-week high
+   • Why = Track momentum stocks
+   • How = Use each view
+```
+
+### Purpose
+
+Entry point for:
+✓ New users learning the app
+✓ Understanding data relationship
+✓ Choosing which view to explore
+✓ Getting investing inspiration
+
+---
+
 ## Cross-View Patterns
 
 ### Data Fetching Pattern

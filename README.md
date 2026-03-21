@@ -78,35 +78,45 @@ The app will open at `http://localhost:8501`
 
 ## 🔑 Key Features
 
-### 1. **Within 5% of 52W High**
-Stocks trading within 5% of their 52-week highs—potential breakout candidates.
+### 1. **Start Here** 
+Dashboard with key metrics, quick snapshots, and navigation guide for new users.
 
-### 2. **5–50% from 52W High**
-Stocks that have corrected 5-50%—balance between correction and recovery potential.
+### 2. **Trend Analyzer**
+Identify consistent performers using 3 non-overlapping time buckets (0-7D, 8-30D, 31-60D) with trend scoring and acceleration metrics.
 
-### 3. **Big Dippers (50%+ Down)**
-Stocks down 50%+—deep value or distressed situations.
+### 3. **Trend Shift Analyzer**
+Week-over-week momentum changes—identify accelerating or decelerating stocks with market cap comparisons.
 
-### 4. **Trend Shift Analyzer**
-Week-over-week momentum changes across stocks and industries.
+### 4. **Emerging Winners**
+Stocks that recently started hitting 52-week highs with accelerating momentum and rising valuations.
 
-### 5. **Emerging Winners**
-Stocks with accelerating positive momentum and rising valuations.
+### 5. **Momentum Summary**
+Snapshot of which stocks appear most frequently in 52-week highs with rolling hit counts (7, 30, 60 days).
 
-### 6. **Trend Analyzer**
-Long-term trend analysis with market cap evolution and valuation metrics.
+### 6. **Multi-Bagger Hunt**
+Rank stocks by persistence in 52-week highs—identify potential multi-baggers with high persistence scores and recent acceleration.
 
-### 7. **Industry Tailwinds**
-Sector-level analysis of momentum and performance trends.
+### 7. **Within 5% of 52W High**
+Stocks trading within 5% of their 52-week highs—potential breakout candidates with momentum.
 
-### 8. **Momentum Summary**
-Snapshot of which stocks appear most frequently in 52-week highs across rolling windows (7, 30, 60 days).
+### 8. **5–50% from 52W High**
+Stocks that have corrected 5-50% from highs—balance between pullback and recovery potential.
+
+### 9. **Big Dippers (50%+ Down)**
+Stocks down 50%+—deep value opportunities or distressed situations with emphasized valuation metrics.
+
+### 10. **Trend Analyzer (Long-term)**
+Market cap evolution and valuation trends over time with interactive visualizations.
+
+### 11. **Industry Tailwinds**
+Sector-level analysis of momentum and performance trends using market-cap-weighted aggregations to reduce outlier skew.
 
 ## 🛠️ Technology Stack
 
 | Component | Technology |
 |-----------|-----------|
 | **Frontend** | Streamlit |
+| **Interactive Tables** | AG-Grid (streamlit-aggrid) |
 | **Backend** | Python 3.10+ |
 | **Database** | SQLite3 |
 | **Data Processing** | Pandas, NumPy |

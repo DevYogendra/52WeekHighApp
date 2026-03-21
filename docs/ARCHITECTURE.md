@@ -11,14 +11,16 @@
 │  ┌──────────────────────────────────────────┐           │
 │  │  View Selection (Sidebar Radio)          │           │
 │  ├──────────────────────────────────────────┤           │
+│  │ • Start Here                             │           │
+│  │ • Trend Analyzer                         │           │
+│  │ • Trend Shift Analyzer                   │           │
+│  │ • Industry Tailwinds                     │           │
+│  │ • Emerging Winners                       │           │
+│  │ • Momentum Summary                       │           │
+│  │ • Multi-Bagger Hunt                      │           │
 │  │ • Within 5% of 52W High                  │           │
 │  │ • 5–50% from 52W High                    │           │
 │  │ • Big Dippers (50%+ Down)                │           │
-│  │ • Trend Shift Analyzer                   │           │
-│  │ • Emerging Winners                       │           │
-│  │ • Trend Analyzer                         │           │
-│  │ • Industry Tailwinds                     │           │
-│  │ • Momentum Summary                       │           │
 │  └──────────────────────────────────────────┘           │
 │           ↓                                              │
 │  ┌──────────────────────────────────────────┐           │
@@ -26,23 +28,28 @@
 │  │  (importlib.import_module)               │           │
 │  └──────────────────────────────────────────┘           │
 └─────────────────────────────────────────────────────────┘
+         ↓              ↓                      ↓
+    ┌────────────────────┐          ┌──────────────────────┐
+    │  db_utils.py       │          │  plot_utils.py       │
+    │  (Data Layer)      │          │  (Visualization)     │
+    └────────────────────┘          └──────────────────────┘
          ↓                                    ↓
-    ┌────────────────┐          ┌──────────────────────┐
-    │  db_utils.py   │          │  plot_utils.py       │
-    │  (Data Layer)  │          │  (Visualization)     │
-    └────────────────┘          └──────────────────────┘
-         ↓                              ↓
-    ┌────────────────┐          ┌──────────────────────┐
-    │   config.py    │          │  matplotlib/plotly   │
-    │ (Settings)     │          │  (Chart Libraries)   │
-    └────────────────┘          └──────────────────────┘
+    ┌────────────────────┐          ┌──────────────────────┐
+    │   config.py        │          │  grid_utils.py       │
+    │ (Settings)         │          │  (Grid Rendering)    │
+    └────────────────────┘          └──────────────────────┘
+         ↓                                    ↓
+    ┌────────────────────┐          ┌──────────────────────┐
+    │  plot_utils.py +   │          │  st-aggrid +         │
+    │  plotly/matplotlib │          │  JavaScript          │
+    └────────────────────┘          └──────────────────────┘
          ↓
     ┌────────────────────────────────────┐
-    │      highlevel SQLite Database     │
+    │      SQLite Database               │
     │         (highs.db)                 │
     │  ┌────────────────────────────┐   │
     │  │ Tables:                    │   │
-    │  │ • highs                    │   │
+    │  │ • highs (main data)        │   │
     │  │ • fivetofiftyclub          │   │
     │  │ • downfromhigh             │   │
     │  └────────────────────────────┘   │
@@ -129,7 +136,53 @@ market_cap_line_chart(stock_data, name)     # Time-series chart
 
 ---
 
-### 4. **Configuration: config.py**
+### 4. **Grid Rendering: grid_utils.py**
+
+**Responsibility:** Interactive table rendering with AG-Grid
+
+**Main Function:**
+```python
+render_interactive_table(
+    df,
+    columns=["name", "market_cap", "industry"],
+    key="unique_table_key",           # Unique identifier for widget
+    rename_map={"name": "Company"},   # Display column names
+    integer_cols=["hits_7"],          # Format as integers
+    major_cols=["market_cap"],        # Format with commas
+    one_decimal_cols=["%_gain_mc"],   # Show 1 decimal
+    two_decimal_cols=["score"],       # Show 2 decimals
+    link_col="name",                  # Column with HTML links
+    height=400,                       # Grid height
+    fit_columns=True                  # Auto-fit widths
+)
+```
+
+**Features:**
+- ✅ Sortable columns (click header)
+- ✅ Filterable columns (right-click header)
+- ✅ Resizable columns
+- ✅ Number formatting (integers, decimals, commas)
+- ✅ Clickable links (if link_col specified)
+- ✅ Large numbers displayed in currency format
+
+**Key Functions:**
+```
+_normalize_for_grid(df)        # Normalize data types for display
+_js_number_formatter()         # JavaScript formatting for numbers
+_js_major_formatter()          # JavaScript formatting for large values
+_build_screener_url()          # Build links to Screener.in
+_extract_link()                # Extract URLs from HTML
+```
+
+**Benefits:**
+- Much better UX than st.dataframe()
+- Users can export data to CSV
+- Powerful filtering without reloading
+- Professional appearance
+
+---
+
+### 5. **Configuration: config.py**
 
 **Responsibility:** Centralized settings and constants
 

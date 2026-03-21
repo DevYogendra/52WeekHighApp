@@ -107,6 +107,7 @@ pip list
 **Expected output:**
 ```
 streamlit          1.28.0+
+streamlit-aggrid   1.0.5+
 plotly             5.17.0+
 pandas             2.0.0+
 numpy              1.24.0+
@@ -525,23 +526,28 @@ pytest tests/
 ├── config.py                 # Configuration
 ├── db_utils.py              # Database operations (edit here for new queries)
 ├── plot_utils.py            # Visualizations (edit here for new charts)
+├── grid_utils.py            # Interactive table rendering with AG-Grid
 ├── requirements.txt         # Dependencies
 ├── highs.db                 # Database (created at runtime)
 ├── views/                   # View modules (add new views here)
-│   ├── near_52w_high_view.py
-│   ├── pullback_candidates_view.py
-│   ├── deep_dippers_view.py
-│   ├── trend_shift_view.py
-│   ├── emerging_winners_view.py
-│   ├── trend_analyzer_view.py
-│   ├── industry_tailwinds_view.py
-│   └── momentum_summary_view.py
+│   ├── start_here_view.py                  # Dashboard & getting started
+│   ├── trend_analyzer_view.py              # Consistent performers
+│   ├── trend_shift_view.py                 # Week-over-week analysis
+│   ├── emerging_winners_view.py            # New entries with momentum
+│   ├── momentum_summary_view.py            # Hit frequency summary
+│   ├── multi_bagger_hunt_view.py           # Persistence ranking
+│   ├── industry_tailwinds_view.py          # Sector momentum analysis
+│   ├── near_52w_high_view.py               # Within 5% of highs
+│   ├── pullback_candidates_view.py         # 5-50% correction
+│   ├── deep_dippers_view.py                # 50%+ down (deep value)
+│   ├── bucket_view_utils.py                # Utility functions for views
+│   └── __pycache__/                        # Python cache
 ├── docs/                    # Documentation
-│   ├── README.md
-│   ├── ARCHITECTURE.md
-│   ├── WORKFLOWS.md
-│   ├── API_REFERENCE.md
-│   └── SETUP.md (this file)
+│   ├── README.md                           # Project overview
+│   ├── ARCHITECTURE.md                     # System design
+│   ├── WORKFLOWS.md                        # Detailed workflows per view
+│   ├── API_REFERENCE.md                    # Function documentation
+│   └── SETUP.md                            # This file
 └── tests/                   # Unit tests (if implementing)
     ├── test_db_utils.py
     └── test_plot_utils.py

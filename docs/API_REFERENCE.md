@@ -300,6 +300,582 @@ name         → string
 
 ---
 
+#### `get_latest_table_date(table_name: str) -> datetime.date | None`
+
+**Description:** Get the most recent date available in a specific table (cached).
+
+**Signature:**
+```python
+@st.cache_data(ttl=CACHE_TTL)
+def get_latest_table_date(table_name: str) -> datetime.date | None
+```
+
+**Parameters:**
+- `table_name` (str) → Name of table to check
+  - `config.TABLE_HIGHS` → "highs"
+  - `config.TABLE_FIVETOFIFTYCLUB` → "fivetofiftyclub"
+  - `config.TABLE_DOWNFROMHIGH` → "downfromhigh"
+
+**Returns:**
+- `datetime.date` → Latest date in table
+- `None` → If table empty or error occurs
+
+**Example:**
+```python
+from config import TABLE_HIGHS
+latest_date = get_latest_table_date(TABLE_HIGHS)
+print(f"Latest: {latest_date}")  # datetime.date(2026, 3, 19)
+
+if latest_date:
+    st.caption(f"Data current as of: {latest_date}")
+```
+
+**Use Cases:**
+- Display "data as of" timestamp in UI
+- Determine lookback windows
+- Validate if new data is available
+
+---
+
+#### `get_persistence_scores() -> pd.DataFrame`
+
+**Description:** Compute persistence scores for multi-bagger candidate ranking.
+
+**Signature:**
+```python
+@st.cache_data(ttl=CACHE_TTL)
+def get_persistence_scores() -> pd.DataFrame
+```
+
+**Returns:**
+```python
+pd.DataFrame with additional columns:
+├─... (all momentum_summary columns)
+├─ freq_ratio_7_30          (float64)  hits_7 ÷ hits_30 (acceleration)
+├─ freq_ratio_30_60         (float64)  hits_30 ÷ hits_60 (sustained?)
+├─ gain_mc                  (float64)  Market cap gain
+└─ persistence_score        (float64)  Composite ranking score
+```
+
+**Scoring Formula:**
+```python
+persistence_score = 
+    (40 × freq_ratio_7_30 capped[0,10]) +
+    (30 × freq_ratio_30_60 capped[0,10]) +
+    (30 × (gain_mc capped[-100,300] ÷ 100))
+```
+
+**Interpretation:**
+- Higher score = Stronger persistence + recent acceleration
+- ~20+ = Candidate for multi-bagger hunt
+- ~50+ = High confidence persistent performer
+
+**Example:**
+```python
+df = get_persistence_scores()
+# Top 10 multi-bagger candidates
+top_10 = df.nlargest(10, "persistence_score")
+print(top_10[["name", "hits_7", "persistence_score"]])
+```
+
+---
+
+#### `get_frequency_timeline(stock_name: str, weeks: int = 12) -> pd.DataFrame`
+
+**Description:** Get weekly 52W-high frequency trend for a given stock (last 12 weeks default).
+
+**Signature:**
+```python
+@st.cache_data(ttl=CACHE_TTL)
+def get_frequency_timeline(stock_name: str, weeks: int = 12) -> pd.DataFrame
+```
+
+**Parameters:**
+- `stock_name` (str) → Exact company name to look up
+- `weeks` (int) → Number of weeks to return (default: 12)
+
+**Returns:**
+```python
+pd.DataFrame with columns:
+├─ week              (datetime64)  Start of week
+├─ frequency         (int64)       Count of high appearances in that week
+└─ market_cap_last   (float64)     Latest market cap for that week
+```
+
+**Example:**
+```python
+timeline = get_frequency_timeline("HDFC Bank", weeks=13)
+print(timeline)
+#                week  frequency  market_cap_last
+# 0 2026-01-05  2          450000000000
+# 1 2026-01-12  3          455000000000
+```
+
+**Use Cases:**
+- Visualize stock momentum trends
+- Input to frequency chart (plotly)
+- Identify acceleration phases
+
+---
+
+#### `get_sparkline_data() -> pd.DataFrame`
+
+**Description:** Fetch sparkline presence data for all stocks (for chart overlays).
+
+**Signature:**
+```python
+@st.cache_data(ttl=CACHE_TTL)
+def get_sparkline_data() -> pd.DataFrame
+```
+
+**Returns:**
+```python
+pd.DataFrame with columns:
+├─ name           (string)     Company name
+├─ date           (datetime64) Date of appearance
+└─ value          (int64)      Always 1 (presence flag)
+```
+
+**Note:** This returns raw presence data; typically grouped by name for chart visualization.
+
+**Example:**
+```python
+df = get_sparkline_data()
+# Find stocks with most recent appearances
+latest = df.sort_values("date").groupby("name").tail(1)
+```
+
+---
+
+### Helper & Formatting Functions
+
+#### `add_screener_links(df: pd.DataFrame) -> pd.DataFrame`
+
+**Description:** Convert company names to clickable Screener.in links.
+
+**Signature:**
+```python
+def add_screener_links(df: pd.DataFrame) -> pd.DataFrame
+```
+
+**Parameters:**
+- `df` (pd.DataFrame) → Must contain columns: `name`, `nse_code` (preferred), `bse_code`
+
+**Returns:**
+- `pd.DataFrame` → Copy with `name` column containing HTML `<a>` tags
+
+**Behavior:**
+- Prefers NSE code if valid
+- Falls back to BSE code if NSE unavailable
+- Returns plain name if both unavailable (warning displayed)
+
+**Example:**
+```python
+df = get_data_for_date("2026-03-19")
+df = add_screener_links(df)
+st.markdown(df[["name", "market_cap"]].to_html(escape=False), unsafe_allow_html=True)
+# Name will be clickable link to Screener.in
+```
+
+**Safety:**
+- ✓ Validates codes before use (checks INVALID_CODES set)
+- ✓ Warns if no valid codes found
+- ✓ User clicks link opens in new tab
+
+---
+
+#### `_apply_standard_types(df: pd.DataFrame) -> pd.DataFrame`
+
+**Description:** Apply consistent type conversions to standard columns internally (private function).
+
+**Signature:**
+```python
+def _apply_standard_types(df: pd.DataFrame) -> pd.DataFrame
+```
+
+**Conversions Applied:**
+```python
+bse_code     → Int64 (nullable integer)
+nse_code     → string
+industry     → string
+name         → string
+```
+
+**Note:** Automatically called by database query functions, not normally called directly.
+
+---
+
+#### `compute_industry_tailwind_stats(df: pd.DataFrame) -> pd.DataFrame`
+
+**Description:** Aggregate industry stats with market-cap weighting to reduce small-cap outlier skew.
+
+**Signature:**
+```python
+def compute_industry_tailwind_stats(df: pd.DataFrame) -> pd.DataFrame
+```
+
+**Parameters:**
+- `df` (pd.DataFrame) → Must contain: `industry`, `name`, `hits_7`, `%_gain_mc`, `market_cap`
+
+**Returns:**
+```python
+pd.DataFrame aggregated by industry:
+├─ industry         (object)   Industry name
+├─ count_stocks     (int64)    Number of companies
+├─ avg_hits_7       (float64)  Average 7-day hit count
+└─ weighted_gain_mc (float64)  Market-cap-weighted gain %
+```
+
+**Key Feature:** Market-cap weighting prevents tiny 1000% gainers from skewing sector averages.
+
+**Example:**
+```python
+df = get_momentum_summary()
+industry_stats = compute_industry_tailwind_stats(df)
+print(industry_stats.sort_values("weighted_gain_mc", ascending=False))
+```
+
+---
+
+#### `format_major_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame`
+
+**Description:** Apply human-friendly formatting to large-value columns (e.g., market caps).
+
+**Signature:**
+```python
+def format_major_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame
+```
+
+**Parameters:**
+- `df` (pd.DataFrame) → DataFrame to format
+- `columns` (list[str]) → Column names to format
+
+**Formatting:**
+```python
+1000000 → "1,000,000"
+5000000000 → "5,000,000,000"
+```
+
+**Example:**
+```python
+df = get_momentum_summary()
+df_display = format_major_columns(df, ["market_cap", "first_market_cap"])
+st.dataframe(df_display)
+```
+
+---
+
+#### `format_decimal_columns(df, one_decimal_cols=None, two_decimal_cols=None) -> pd.DataFrame`
+
+**Description:** Apply consistent decimal precision to display columns.
+
+**Signature:**
+```python
+def format_decimal_columns(
+    df: pd.DataFrame,
+    one_decimal_cols: list[str] | None = None,
+    two_decimal_cols: list[str] | None = None,
+) -> pd.DataFrame
+```
+
+**Parameters:**
+- `df` (pd.DataFrame) → DataFrame to format
+- `one_decimal_cols` (list[str]) → Columns formatted to 1 decimal
+- `two_decimal_cols` (list[str]) → Columns formatted to 2 decimals
+
+**Example:**
+```python
+df = get_momentum_summary()
+df_display = format_decimal_columns(
+    df,
+    one_decimal_cols=["gain_pct_this", "%_gain_mc"],
+    two_decimal_cols=["persistence_score", "avg_valuation"]
+)
+```
+
+---
+
+#### `format_integer_columns(df, integer_cols=None) -> pd.DataFrame`
+
+**Description:** Apply integer formatting to count-like display columns.
+
+**Signature:**
+```python
+def format_integer_columns(
+    df: pd.DataFrame,
+    integer_cols: list[str] | None = None,
+) -> pd.DataFrame
+```
+
+**Parameters:**
+- `df` (pd.DataFrame) → DataFrame to format
+- `integer_cols` (list[str]) → Column names (hit counts, frequencies, etc.)
+
+**Example:**
+```python
+df_display = format_integer_columns(df, integer_cols=["hits_7", "hits_30", "hits_60"])
+```
+
+---
+
+## grid_utils.py
+
+### Interactive Table Rendering
+
+#### `render_interactive_table(...) -> None`
+
+**Description:** Render an interactive AG-Grid table with sorting, filtering, and column resizing.
+
+**Signature:**
+```python
+def render_interactive_table(
+    df: pd.DataFrame,
+    columns: list[str] | None = None,
+    key: str | None = None,
+    rename_map: dict[str, str] | None = None,
+    integer_cols: list[str] | None = None,
+    one_decimal_cols: list[str] | None = None,
+    two_decimal_cols: list[str] | None = None,
+    major_cols: list[str] | None = None,
+    link_col: str | None = None,
+    height: int = 400,
+    fit_columns: bool = False,
+) -> None
+```
+
+**Parameters:**
+- `df` (pd.DataFrame) → Data to display
+- `columns` (list[str]) → Which columns to show (default: all)
+- `key` (str) → Unique key for Streamlit state (avoids widget conflicts)
+- `rename_map` (dict) → Map old column names to display names
+- `integer_cols` (list[str]) → Columns to format as integers
+- `one_decimal_cols` (list[str]) → Columns with 1 decimal place
+- `two_decimal_cols` (list[str]) → Columns with 2 decimal places
+- `major_cols` (list[str]) → Large numbers (with commas)
+- `link_col` (str) → Column name containing HTML links
+- `height` (int) → Grid height in pixels
+- `fit_columns` (bool) → Auto-fit column widths
+
+**Example:**
+```python
+df = get_momentum_summary()
+render_interactive_table(
+    df,
+    columns=["name", "industry", "hits_7", "market_cap", "%_gain_mc"],
+    rename_map={"name": "Company", "industry": "Sector"},
+    integer_cols=["hits_7"],
+    major_cols=["market_cap"],
+    one_decimal_cols=["%_gain_mc"],
+    link_col="name",
+    height=500,
+)
+```
+
+**Features:**
+- ✓ Sortable columns (click header)
+- ✓ Filterable (right-click column header)
+- ✓ Resizable columns
+- ✓ Formatted numbers
+- ✓ Clickable links (if link_col specified)
+
+---
+
+## plot_utils.py
+
+### Visualization Functions
+
+#### `sector_heatmap(heat_df: pd.DataFrame, title: str) -> plotly.graph_objects.Figure`
+
+**Description:** Create a static heatmap of industry momentum.
+
+**Signature:**
+```python
+def sector_heatmap(heat_df: pd.DataFrame, title: str) -> Figure
+```
+
+**Parameters:**
+- `heat_df` (pd.DataFrame) → Must have columns: `industry`, `Count`, `Avg_Gain_Percent`
+- `title` (str) → Chart title
+
+**Returns:**
+- `plotly.graph_objects.Figure` → Use with `st.plotly_chart()`
+
+**Expected Columns:**
+```python
+industry              → Industry name (x-axis)
+Count                 → Number of companies (y-axis)
+Avg_Gain_Percent      → Average gain % (color intensity)
+```
+
+**Example:**
+```python
+df = get_momentum_summary()
+industry_agg = df.groupby("industry").agg({
+    "name": "count",  # → Count
+    "%_gain_mc": "mean"  # → Avg_Gain_Percent
+}).rename(columns={"name": "Count"})
+industry_agg["Avg_Gain_Percent"] = industry_agg["%_gain_mc"]
+
+fig = sector_heatmap(industry_agg, "Industry Momentum Heatmap")
+st.plotly_chart(fig, use_container_width=True)
+```
+
+---
+
+#### `animated_sector_heatmap(weekly_agg: pd.DataFrame, title: str) -> plotly.graph_objects.Figure`
+
+**Description:** Create animated heatmap showing week-by-week sector momentum evolution.
+
+**Signature:**
+```python
+def animated_sector_heatmap(weekly_agg: pd.DataFrame, title: str) -> Figure
+```
+
+**Parameters:**
+- `weekly_agg` (pd.DataFrame) → Must have columns: `industry`, `Count`, `Avg_Gain_Percent`, `week`
+- `title` (str) → Chart title
+
+**Returns:**
+- `plotly.graph_objects.Figure` → Animated across weeks
+
+**Expected Columns:**
+```python
+industry              → Industry name
+Count                 → Number of companies
+Avg_Gain_Percent      → Average gain %
+week                  → Week identifier (for animation frames)
+```
+
+**Example:**
+```python
+# Compute weekly aggregations...
+fig = animated_sector_heatmap(weekly_data, "Weekly Industry Trends")
+st.plotly_chart(fig, use_container_width=True)
+```
+
+---
+
+#### `market_cap_line_chart(stock_data: pd.DataFrame, company_name: str) -> plotly.graph_objects.Figure`
+
+**Description:** Create time-series line chart showing market cap evolution.
+
+**Signature:**
+```python
+def market_cap_line_chart(stock_data: pd.DataFrame, company_name: str) -> Figure
+```
+
+**Parameters:**
+- `stock_data` (pd.DataFrame) → Must have: `date`, `market_cap`
+- `company_name` (str) → Company name for title
+
+**Returns:**
+- `plotly.graph_objects.Figure` → Interactive line chart with markers
+
+**Example:**
+```python
+df = get_historical_market_cap()
+stock_data = df[df["name"] == "HDFC Bank"]
+fig = market_cap_line_chart(stock_data, "HDFC Bank")
+st.plotly_chart(fig, use_container_width=True)
+```
+
+---
+
+## config.py
+
+All configuration constants centralized for easy modification.
+
+### Database Configuration
+
+```python
+DB_PATH                          # Path to SQLite database (highs.db)
+CACHE_TTL                        # Cache time-to-live (3600 seconds = 1 hour)
+```
+
+### Table Names
+
+```python
+TABLE_HIGHS                      # "highs" - Main 52W high stocks
+TABLE_FIVETOFIFTYCLUB           # "fivetofiftyclub" - 5-50% correction
+TABLE_DOWNFROMHIGH              # "downfromhigh" - 50%+ down
+```
+
+### Data Validation
+
+```python
+INVALID_CODES                    # Set of invalid stock codes {"", "NA", "<NA>", etc.}
+STANDARD_COLUMNS                # ["bse_code", "nse_code", "industry", "name"]
+COLUMN_TYPES                    # Type mapping for type conversion
+```
+
+### Visualization Settings
+
+```python
+PLOT_HEIGHT                      # Height of charts (600 pixels)
+PLOT_COLOR_SCALE                # Color scheme "RdYlGn" (Red-Yellow-Green)
+```
+
+### Analysis Configuration
+
+```python
+ROLLING_WINDOWS                  # [7, 30, 60] - Days for rolling aggregations
+```
+
+---
+
+## Key Patterns & Best Practices
+
+### Error Handling
+
+All database functions follow this pattern:
+```python
+try:
+    # Database operation
+except sqlite3.Error as e:
+    st.error(f"Database error: {e}")
+    return pd.DataFrame()  # or [] for lists
+```
+
+### Caching Strategy
+
+```python
+@st.cache_data(ttl=CACHE_TTL)
+def expensive_function():
+    # Cache expires after 1 hour
+    # Prevents stale financial data
+    pass
+```
+
+### Type Safety
+
+```python
+# Before display
+df = _apply_standard_types(df)  # Normalize types
+
+# Format for display
+df = format_major_columns(df, ["market_cap"])
+df = format_integer_columns(df, ["hits_7", "hits_30"])
+```
+
+### Safe SQL Queries
+
+```python
+# ✓ SAFE - Parameterized
+df = pd.read_sql(
+    f"SELECT * FROM {TABLE_HIGHS} WHERE date = ?",
+    conn,
+    params=(date_str,)
+)
+
+# ✗ UNSAFE - String interpolation (SQL injection risk)
+df = pd.read_sql(
+    f"SELECT * FROM {TABLE_HIGHS} WHERE date = '{date_str}'",
+    conn
+)
+```
+
+---
+
 #### `get_sparkline_data() -> pd.DataFrame`
 
 **Description:** Fetch presence data for generating sparkline charts (stock activity over time).
