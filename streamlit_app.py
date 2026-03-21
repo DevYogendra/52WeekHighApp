@@ -52,24 +52,36 @@ st.session_state.current_page = page_selection
 st.session_state.current_doc = None
 
 # Helper function to display HTML documentation
-def display_help_page(page_type):
-    """Display HTML documentation pages"""
-    docs_dir = Path(__file__).parent / "docs"
+@st.cache_resource
+def load_html_file(page_type):
+    """Load and cache HTML documentation pages"""
+    import os
+    
+    # Get the directory of the current script
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    docs_dir = os.path.join(current_dir, "docs")
     
     file_mapping = {
-        "help_hub": docs_dir / "index.html",
-        "help_quick_start": docs_dir / "quick-start.html",
-        "help_interpretation": docs_dir / "interpretation-guide.html",
-        "help_glossary": docs_dir / "glossary.html",
+        "help_hub": os.path.join(docs_dir, "index.html"),
+        "help_quick_start": os.path.join(docs_dir, "quick-start.html"),
+        "help_interpretation": os.path.join(docs_dir, "interpretation-guide.html"),
+        "help_glossary": os.path.join(docs_dir, "glossary.html"),
     }
     
     html_file = file_mapping.get(page_type)
-    if html_file and html_file.exists():
+    if html_file and os.path.exists(html_file):
         with open(html_file, "r", encoding="utf-8") as f:
-            html_content = f.read()
-        components.html(html_content, height=800, scrolling=True)
+            return f.read()
+    return None
+
+def display_help_page(page_type):
+    """Display HTML documentation pages"""
+    html_content = load_html_file(page_type)
+    
+    if html_content:
+        components.html(html_content, height=900, scrolling=True)
     else:
-        st.error(f"Documentation file not found: {html_file}")
+        st.error(f"Documentation file not found for: {page_type}")
 
 # Route to appropriate page
 if st.session_state.current_doc:
