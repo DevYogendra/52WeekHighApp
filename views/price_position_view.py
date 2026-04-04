@@ -182,7 +182,7 @@ def _load_data(bucket_cfg: dict) -> pd.DataFrame:
             df[col] = pd.to_datetime(df[col]).dt.date
 
     df = compute_mcap_change(df)
-    df["market_cap_cr"] = pd.to_numeric(df.get("market_cap"), errors="coerce") / 1e7
+    df["market_cap_cr"] = pd.to_numeric(df.get("market_cap"), errors="coerce")
 
     return df, date_info
 

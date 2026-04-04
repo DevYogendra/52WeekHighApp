@@ -251,8 +251,6 @@ def _render_persistence():
         st.warning("No persistence data available.")
         return
 
-    df["market_cap_cr"] = (df["market_cap"].fillna(0) / 1e7).astype(float)
-
     min_hits    = st.sidebar.number_input("Min hits (7 days)", min_value=0,
                                           max_value=int(df["hits_7"].max()), value=2, step=1, key="ps_hits")
     score_cutoff = st.sidebar.number_input("Min persistence score", min_value=0.0,
@@ -266,13 +264,13 @@ def _render_persistence():
 
     render_interactive_table(
         filtered.sort_values("persistence_score", ascending=False),
-        columns=["name", "industry", "market_cap_cr", "hits_7", "hits_30", "hits_60", "%_gain_mc", "persistence_score"],
+        columns=["name", "industry", "market_cap", "hits_7", "hits_30", "hits_60", "%_gain_mc", "persistence_score"],
         key="persistence_main",
-        rename_map={"market_cap_cr": "MCap (Cr)", "%_gain_mc": "Gain %", "persistence_score": "Persistence Score"},
+        rename_map={"market_cap": "MCap (Cr)", "%_gain_mc": "Gain %", "persistence_score": "Persistence Score"},
         integer_cols=["hits_7", "hits_30", "hits_60"],
         one_decimal_cols=["%_gain_mc"],
         two_decimal_cols=["persistence_score"],
-        major_cols=["market_cap_cr"],
+        major_cols=["market_cap"],
         link_col="name",
         height=460,
     )
