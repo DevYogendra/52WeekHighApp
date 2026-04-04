@@ -56,7 +56,7 @@ DETAILED_COLS = [
 _TAG_RE = re.compile(r"<[^>]+>")
 
 BUCKET_ONE_DECIMAL_COLS = [
-    “Δ% MCap”,
+    "Δ% MCap",
     "down_from_52w_high",
     "change_in_dii_holding",
     "change_in_fii_holding",
