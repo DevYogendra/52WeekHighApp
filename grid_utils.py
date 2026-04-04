@@ -26,9 +26,14 @@ def _extract_link(value: object) -> tuple[str, str | None]:
     return text or str(value), None
 
 
+_NA_VALUES = {"", "nan", "none", "na", "<na>"}
+
+
 def _build_screener_url(row: pd.Series) -> str | None:
     nse = str(row.get("nse_code", "")).strip()
     bse = str(row.get("bse_code", "")).strip()
+    nse = "" if nse.lower() in _NA_VALUES else nse
+    bse = "" if bse.lower() in _NA_VALUES else bse
     code = nse or bse
     return f"https://www.screener.in/company/{code}/" if code else None
 
