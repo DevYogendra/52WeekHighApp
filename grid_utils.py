@@ -133,7 +133,7 @@ def render_interactive_table(
 
     st.dataframe(
         working,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         height=height,
         column_config=col_cfg,

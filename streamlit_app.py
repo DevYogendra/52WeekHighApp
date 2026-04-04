@@ -1,72 +1,29 @@
 import importlib
-from pathlib import Path
 
 import streamlit as st
 
-from docs.html_integration import DocumentationHelper
-
 st.set_page_config(page_title="52-Week High Tracker", layout="wide")
 
-DOCS_DIR = Path(__file__).resolve().parent / "docs"
-docs_helper = DocumentationHelper(docs_dir=DOCS_DIR)
-
-if "current_page" not in st.session_state:
-    st.session_state.current_page = "Start Here"
-if "current_doc" not in st.session_state:
-    st.session_state.current_doc = None
-
-page_options = {
+PAGE_OPTIONS = {
     "Start Here": "start_here_view",
     "Momentum Rankings": "momentum_view",
     "Price Position": "price_position_view",
     "Industry Tailwinds": "industry_tailwinds_view",
 }
 
-doc_options = {
-    "Help Hub": "Documentation Hub",
-    "Quick Start": "Quick Start",
-    "How to Read": "Interpretation Guide",
-    "Glossary": "Financial Glossary",
-}
-
-st.sidebar.title("Navigation")
-st.sidebar.subheader("Main Views", divider="gray")
-
+st.sidebar.title("52-Week High Tracker")
 page_selection = st.sidebar.radio(
     "Go to",
-    list(page_options.keys()),
+    list(PAGE_OPTIONS.keys()),
     key="page_radio",
     label_visibility="collapsed",
 )
 
-st.sidebar.divider()
-st.sidebar.subheader("Help & Documentation", divider="gray")
-
-doc_selection = st.sidebar.radio(
-    "Documentation",
-    ["None"] + list(doc_options.keys()),
-    key="doc_radio",
-    label_visibility="collapsed",
-)
-
-if doc_selection != "None":
-    st.session_state.current_doc = doc_options[doc_selection]
-    st.session_state.current_page = None
-else:
-    st.session_state.current_doc = None
-    st.session_state.current_page = page_selection
-
-if st.session_state.current_doc:
-    docs_helper.add_main_help_page(initial_page=st.session_state.current_doc)
-elif st.session_state.current_page:
-    try:
-        selected_module_name = page_options[st.session_state.current_page]
-        module = importlib.import_module(f"views.{selected_module_name}")
-        if hasattr(module, "main"):
-            module.main()
-        else:
-            st.error(f"Module `{selected_module_name}` does not have a `main()` function.")
-    except Exception as exc:
-        st.error(f"Error loading view: {exc}")
-else:
-    st.info("Select a view from the sidebar to get started.")
+try:
+    module = importlib.import_module(f"views.{PAGE_OPTIONS[page_selection]}")
+    if hasattr(module, "main"):
+        module.main()
+    else:
+        st.error(f"Module `{PAGE_OPTIONS[page_selection]}` has no main() function.")
+except Exception as exc:
+    st.error(f"Error loading view: {exc}")

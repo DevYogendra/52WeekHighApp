@@ -153,7 +153,7 @@ def compute_industry_tailwind_stats(df: pd.DataFrame) -> pd.DataFrame:
     )
     weighted_gain = (
         working.groupby("industry", dropna=False)
-        .apply(_weighted_gain)
+        .apply(_weighted_gain, include_groups=False)
         .rename("weighted_gain_mc")
         .reset_index()
     )
