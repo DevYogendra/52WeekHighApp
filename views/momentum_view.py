@@ -209,8 +209,8 @@ def _render_weekly_shift():
     merged = pd.merge(this_week, last_week, on="name", how="outer", suffixes=("_this", "_last"))
     merged["hits_delta"] = merged["hits_this"].fillna(0) - merged["hits_last"].fillna(0)
     merged["gain_delta"] = merged["gain_pct_this"].fillna(0) - merged["gain_pct_last"].fillna(0)
-    merged["nse_code"]   = merged["nse_code_this"]
-    merged["bse_code"]   = merged["bse_code_this"]
+    merged["nse_code"]   = merged["nse_code_this"].fillna(merged["nse_code_last"])
+    merged["bse_code"]   = merged["bse_code_this"].fillna(merged["bse_code_last"])
 
     rising = merged[(merged["hits_delta"] > 0) & (merged["gain_delta"] > 0)].sort_values(
         ["hits_delta", "gain_delta"], ascending=[False, False]

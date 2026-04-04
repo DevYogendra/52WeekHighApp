@@ -4,6 +4,21 @@ import pandas as pd
 import streamlit as st
 from config import DB_PATH, CACHE_TTL, TABLE_HIGHS, TABLE_FIVETOFIFTYCLUB, TABLE_DOWNFROMHIGH
 
+
+def register_adapters() -> None:
+    """Register Python date/datetime ↔ SQLite TEXT adapters.
+
+    Call once at startup in ETL scripts so dates round-trip correctly.
+    """
+    sqlite3.register_adapter(
+        datetime.date,
+        lambda d: d.isoformat(),
+    )
+    sqlite3.register_converter(
+        "DATE",
+        lambda s: datetime.date.fromisoformat(s.decode("utf-8")),
+    )
+
 def get_fivetofiftyclub_dates():
     """Fetch distinct dates from fivetofiftyclub table."""
     try:
@@ -126,13 +141,23 @@ def format_decimal_columns(
     return formatted
 
 
-def compute_industry_tailwind_stats(df: pd.DataFrame) -> pd.DataFrame:
-    """Aggregate industry stats using market-cap weighting to reduce small-cap outlier skew."""
+def compute_industry_tailwind_stats(
+    df: pd.DataFrame, hits_col: str = "hits_in_window"
+) -> pd.DataFrame:
+    """Aggregate industry stats using market-cap weighting to reduce small-cap outlier skew.
+
+    Args:
+        df: Per-stock dataframe with at least industry, name, %_gain_mc, market_cap, and hits_col.
+        hits_col: Column name for hit counts to aggregate (default: 'hits_in_window').
+
+    Returns:
+        DataFrame with columns: industry, count_stocks, total_hits, avg_hits, weighted_gain_mc.
+    """
     if df.empty or "industry" not in df.columns:
         return pd.DataFrame()
 
     working = df.copy()
-    working["hits_7"] = pd.to_numeric(working.get("hits_7"), errors="coerce")
+    working[hits_col] = pd.to_numeric(working.get(hits_col), errors="coerce")
     working["%_gain_mc"] = pd.to_numeric(working.get("%_gain_mc"), errors="coerce")
     working["market_cap"] = pd.to_numeric(working.get("market_cap"), errors="coerce")
 
@@ -147,7 +172,8 @@ def compute_industry_tailwind_stats(df: pd.DataFrame) -> pd.DataFrame:
         working.groupby("industry", dropna=False)
         .agg(
             count_stocks=("name", "count"),
-            avg_hits_7=("hits_7", "mean"),
+            total_hits=(hits_col, "sum"),
+            avg_hits=(hits_col, "mean"),
         )
         .reset_index()
     )
@@ -159,6 +185,50 @@ def compute_industry_tailwind_stats(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     return industry_stats.merge(weighted_gain, on="industry", how="left")
+
+
+@st.cache_data(ttl=CACHE_TTL)
+def get_tailwind_stocks(lookback_days: int = 60, min_hits: int = 5) -> pd.DataFrame:
+    """Return stocks with >= min_hits appearances in the last lookback_days days,
+    joined with their latest snapshot (market_cap, industry, nse_code, bse_code, %_gain_mc)."""
+    latest_date = get_latest_table_date(TABLE_HIGHS)
+    if latest_date is None:
+        return pd.DataFrame()
+    since = latest_date - datetime.timedelta(days=lookback_days - 1)
+
+    with sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
+        hits = pd.read_sql(
+            f"""
+            SELECT name, COUNT(*) AS hits_in_window
+            FROM {TABLE_HIGHS}
+            WHERE date BETWEEN ? AND ?
+            GROUP BY name
+            HAVING hits_in_window >= ?
+            """,
+            conn,
+            params=(since, latest_date, min_hits),
+        ).set_index("name")
+
+        latest_snap = pd.read_sql(
+            f"""
+            SELECT h.*
+            FROM {TABLE_HIGHS} h
+            JOIN (
+                SELECT name, MAX(date) AS max_date FROM {TABLE_HIGHS} GROUP BY name
+            ) m ON h.name = m.name AND h.date = m.max_date
+            """,
+            conn,
+        ).set_index("name")
+
+    df = latest_snap.join(hits, how="inner")
+    for col in ["market_cap", "first_market_cap", "first_seen_date"]:
+        if col not in df.columns:
+            df[col] = pd.NA
+    df["%_gain_mc"] = (
+        100 * (df["market_cap"] - df["first_market_cap"])
+        / df["first_market_cap"].replace(0, pd.NA)
+    )
+    return _apply_standard_types(df.reset_index())
 
 
 @st.cache_data(ttl=CACHE_TTL)

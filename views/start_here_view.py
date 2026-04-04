@@ -15,6 +15,7 @@ from db_utils import (
     get_latest_table_date,
     get_momentum_summary,
     get_persistence_scores,
+    get_tailwind_stocks,
 )
 from grid_utils import render_interactive_table
 
@@ -39,7 +40,7 @@ def _render_table(df: pd.DataFrame, columns: list[str], rename_map: dict[str, st
             "Hits 31-60D",
         ],
         one_decimal_cols=["%_gain_mc", "gain_pct_this", "gain_delta"],
-        two_decimal_cols=["persistence_score", "Acceleration", "Weighted Gain %", "Avg Hits 7D"],
+        two_decimal_cols=["persistence_score", "Acceleration", "Weighted Gain %", "Avg Hits"],
         major_cols=["market_cap", "first_market_cap", "market_cap_cr"],
         link_col="name" if "name" in columns else None,
         height=260,
@@ -168,12 +169,13 @@ def main() -> None:
             ["Trend Score", "Acceleration", "%_gain_mc"],
             ascending=[False, False, False],
         ).head(10)
-        top_industry_df = compute_industry_tailwind_stats(momentum_df[momentum_df["hits_7"] >= 2].copy())
+        tailwind_df = get_tailwind_stocks(60, 5)
+        top_industry_df = compute_industry_tailwind_stats(tailwind_df) if not tailwind_df.empty else pd.DataFrame()
         if not top_industry_df.empty:
             top_industry_df = top_industry_df.rename(
                 columns={
                     "count_stocks": "Momentum Stocks",
-                    "avg_hits_7": "Avg Hits 7D",
+                    "avg_hits": "Avg Hits",
                     "weighted_gain_mc": "Weighted Gain %",
                 }
             ).sort_values(["Momentum Stocks", "Weighted Gain %"], ascending=[False, False]).head(8)
@@ -236,7 +238,7 @@ def main() -> None:
         st.caption("Industries with multiple active names. This stays full width so averages and weighted gain remain visible.")
         _render_table(
             top_industry_df,
-            ["industry", "Momentum Stocks", "Avg Hits 7D", "Weighted Gain %"],
+            ["industry", "Momentum Stocks", "Avg Hits", "Weighted Gain %"],
             {},
         )
 

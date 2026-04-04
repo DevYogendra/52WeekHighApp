@@ -20,3 +20,10 @@ Thumbs.db
 
 # SQLite (optional if you're using DB locally)
 *.db
+
+# Credentials — never commit
+.env
+config.local.ini
+
+# Downloaded CSVs (populated by ETL)
+screener_downloads/
