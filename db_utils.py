@@ -2,7 +2,7 @@ import datetime
 import sqlite3
 import pandas as pd
 import streamlit as st
-from config import DB_PATH, CACHE_TTL, TABLE_HIGHS, TABLE_FIVETOFIFTYCLUB, TABLE_DOWNFROMHIGH, INVALID_CODES, COLUMN_TYPES
+from config import DB_PATH, CACHE_TTL, TABLE_HIGHS, TABLE_FIVETOFIFTYCLUB, TABLE_DOWNFROMHIGH
 
 def get_fivetofiftyclub_dates():
     """Fetch distinct dates from fivetofiftyclub table."""
@@ -63,38 +63,6 @@ def get_latest_table_date(table_name: str) -> datetime.date | None:
         return None
 
 # ----------------------------------------------------------------------
-# 🔗  Convenience: add clickable links for Screener.in
-# ----------------------------------------------------------------------
-def add_screener_links(df: pd.DataFrame) -> pd.DataFrame:
-    def is_valid(code):
-        try:
-            if pd.isna(code):
-                return False
-            code = str(code).strip().upper()
-            return code not in INVALID_CODES
-        except:
-            return False
-        
-    def make_link(row):
-        name = row.get("name", "")
-        nse = str(row.get("nse_code", "")).strip()
-        bse = str(row.get("bse_code", "")).strip()
-
-        # Prefer NSE if available and non-empty
-        if is_valid(nse):
-            return f'<a href="https://www.screener.in/company/{nse}/" target="_blank">{name}</a>'
-        elif is_valid(bse):
-            return f'<a href="https://www.screener.in/company/{bse}/" target="_blank">{name}</a>'
-        else:
-            st.warning(f"⚠️ No NSE/BSE code for {name}")
-            return name  # fallback to plain name if no codes
-
-    df = df.copy()
-    df["name"] = df.apply(make_link, axis=1)
-    return df
-
-
-# ----------------------------------------------------------------------
 # 📄  Cached data helpers
 # ----------------------------------------------------------------------
 def _apply_standard_types(df: pd.DataFrame) -> pd.DataFrame:
@@ -153,22 +121,6 @@ def format_decimal_columns(
         if col in formatted.columns:
             formatted[col] = pd.to_numeric(formatted[col], errors="coerce").map(
                 lambda value: "-" if pd.isna(value) else f"{value:.2f}"
-            )
-
-    return formatted
-
-
-def format_integer_columns(
-    df: pd.DataFrame,
-    integer_cols: list[str] | None = None,
-) -> pd.DataFrame:
-    """Apply integer formatting to count-like display columns."""
-    formatted = df.copy()
-
-    for col in integer_cols or []:
-        if col in formatted.columns:
-            formatted[col] = pd.to_numeric(formatted[col], errors="coerce").map(
-                lambda value: "-" if pd.isna(value) else f"{int(value)}"
             )
 
     return formatted
@@ -366,14 +318,101 @@ def get_data_for_date(selected_date: str | datetime.date) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=CACHE_TTL)
-def get_sparkline_data() -> pd.DataFrame:
-    """Fetch sparkline data with caching (TTL from config)."""
+def get_im_momentum_scores() -> pd.DataFrame:
+    """Compute im-momentum novelty + composite scores using 1-year breakout history.
+
+    Novelty (0-20): rewards first-time or rare breakouts over the past 365 days.
+    Momentum (0-10): derived from market-cap gain since first appearance.
+    Composite = novelty × 0.4 + momentum × 0.6
+    """
     try:
+        latest_date = get_latest_table_date(TABLE_HIGHS)
+        if latest_date is None:
+            return pd.DataFrame()
+
+        since_1y = latest_date - datetime.timedelta(days=365)
+
         with sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
-            df = pd.read_sql(f"SELECT name, date FROM {TABLE_HIGHS}", conn)
-        df["date"] = pd.to_datetime(df["date"])
-        df["value"] = 1  # presence flag
-        return df
+            yearly = pd.read_sql(
+                f"""
+                SELECT name,
+                       COUNT(DISTINCT date) AS hits_1y,
+                       MAX(date)            AS last_seen
+                FROM {TABLE_HIGHS}
+                WHERE date BETWEEN ? AND ?
+                GROUP BY name
+                """,
+                conn,
+                params=(since_1y, latest_date),
+            ).set_index("name")
+
+            latest_snap = pd.read_sql(
+                f"""
+                SELECT h.*
+                FROM {TABLE_HIGHS} h
+                JOIN (
+                    SELECT name, MAX(date) AS max_date FROM {TABLE_HIGHS} GROUP BY name
+                ) m ON h.name = m.name AND h.date = m.max_date
+                """,
+                conn,
+            ).set_index("name")
+
+        df = latest_snap.join(yearly, how="left")
+        df["hits_1y"] = df["hits_1y"].fillna(0).astype(int)
+        df["last_seen"] = pd.to_datetime(df["last_seen"])
+        df["days_since_last_high"] = (pd.Timestamp(latest_date) - df["last_seen"]).dt.days
+
+        for col in ["market_cap", "first_market_cap"]:
+            if col not in df.columns:
+                df[col] = pd.NA
+        df["%_gain_mc"] = (
+            100 * (df["market_cap"] - df["first_market_cap"])
+            / df["first_market_cap"].replace(0, pd.NA)
+        )
+
+        def _novelty(hits_1y, days):
+            position = 10  # all entries in highs table are at 52W high by definition
+            if hits_1y <= 1:
+                recency = 10
+            elif hits_1y <= 3:
+                recency = 7
+            elif hits_1y <= 5:
+                recency = 4
+            else:
+                recency = 1
+            if pd.notna(days) and int(days) <= 3:
+                recency = min(recency + 2, 12)
+            return min(20, position + recency)
+
+        def _momentum(gain):
+            if pd.isna(gain):
+                return 5
+            g = float(gain)
+            if g >= 50:
+                return 10
+            if g >= 20:
+                return 8
+            if g >= 0:
+                return 5
+            return 2
+
+        df["novelty_score"] = df.apply(
+            lambda r: _novelty(r["hits_1y"], r["days_since_last_high"]), axis=1
+        )
+        df["momentum_score"] = df["%_gain_mc"].apply(_momentum)
+        df["im_composite"] = (df["novelty_score"] * 0.4 + df["momentum_score"] * 0.6).round(2)
+
+        for col in ["nse_code", "bse_code", "industry"]:
+            if col not in df.columns:
+                df[col] = pd.NA
+
+        return (
+            _apply_standard_types(df.reset_index())
+            .sort_values("im_composite", ascending=False)
+            .reset_index(drop=True)
+        )
+
     except sqlite3.Error as e:
-        st.error(f"Database error fetching sparkline data: {e}")
+        st.error(f"Database error computing im-momentum scores: {e}")
         return pd.DataFrame()
+

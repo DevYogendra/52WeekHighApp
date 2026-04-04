@@ -193,10 +193,10 @@ def main() -> None:
     st.subheader("Suggested investor flow")
     st.markdown(
         """
-        1. Start with `Trend Analyzer` to see the strongest persistent names.
-        2. Check `Trend Shift Analyzer` to catch acceleration or weakening momentum.
-        3. Use `Industry Tailwinds` to confirm whether the sector is helping the stock.
-        4. Use the bucket views only after that, when you want more names to inspect.
+        1. Go to **Momentum Rankings → Trend Leaders** to see the strongest persistent names.
+        2. Check **Momentum Rankings → Weekly Shift** to catch acceleration or weakening momentum.
+        3. Use **Industry Tailwinds** to confirm whether the sector is helping the stock.
+        4. Use **Price Position** when you want to screen names by distance from their 52W high.
         """
     )
 

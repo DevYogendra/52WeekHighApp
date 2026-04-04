@@ -17,15 +17,9 @@ if "current_doc" not in st.session_state:
 
 page_options = {
     "Start Here": "start_here_view",
-    "Trend Analyzer": "trend_analyzer_view",
-    "Trend Shift Analyzer": "trend_shift_view",
+    "Momentum Rankings": "momentum_view",
+    "Price Position": "price_position_view",
     "Industry Tailwinds": "industry_tailwinds_view",
-    "Emerging Winners": "emerging_winners_view",
-    "Momentum Summary": "momentum_summary_view",
-    "Multi-Bagger Hunt": "multi_bagger_hunt_view",
-    "Within 5% of 52W High": "near_52w_high_view",
-    "5-50% from 52W High": "pullback_candidates_view",
-    "Big Dippers (50%+ Down)": "deep_dippers_view",
 }
 
 doc_options = {
