@@ -14,6 +14,7 @@ Run:
 
 import configparser
 import os
+import re
 import sys
 import time
 from datetime import datetime
@@ -30,9 +31,9 @@ from config import DOWNLOAD_DIR, ensure_directories_exist  # noqa: E402
 BASE_URL = "https://www.screener.in"
 
 SCREENS = [
-    {"title": "52WeekHigh5%",          "id": "2702802", "folder": "52weekhigh"},
-    {"title": "atleast50downfromhigh",  "id": "2984566", "folder": "downfromhigh"},
-    {"title": "The5To50ClubFromTop",    "id": "2985269", "folder": "5to50club"},
+    {"title": "52WeekHigh5%",          "id": "2702802", "slug": "52weekhigh5",           "folder": "52weekhigh"},
+    {"title": "atleast50downfromhigh",  "id": "2984566", "slug": "atleast50downfromhigh", "folder": "downfromhigh"},
+    {"title": "The5To50ClubFromTop",    "id": "2985269", "slug": "5to50from52weekshigh",  "folder": "5to50club"},
 ]
 
 
@@ -86,9 +87,22 @@ def login(session: requests.Session, username: str, password: str) -> None:
     print("Login successful.")
 
 
-def fetch_screen_csv(session: requests.Session, screen_id: str) -> pd.DataFrame:
-    url = f"{BASE_URL}/api/export/screen/{screen_id}/"
-    resp = session.get(url, timeout=30)
+def fetch_screen_csv(session: requests.Session, screen_id: str, slug: str) -> pd.DataFrame:
+    screen_page_url = f"{BASE_URL}/screens/{screen_id}/{slug}/"
+    page = session.get(screen_page_url, timeout=15)
+    # Extract csrfmiddlewaretoken from the export form hidden input
+    m = re.search(r'csrfmiddlewaretoken.*?value=["\']([^"\']+)["\']', page.text)
+    csrf_token = m.group(1) if m else session.cookies.get("csrftoken", "")
+    export_url = (
+        f"{BASE_URL}/api/export/screen/"
+        f"?url_name=screen&screen_id={screen_id}&slug_name={slug}"
+    )
+    resp = session.post(
+        export_url,
+        data={"csrfmiddlewaretoken": csrf_token},
+        headers={"Referer": screen_page_url},
+        timeout=30,
+    )
     resp.raise_for_status()
     return pd.read_csv(StringIO(resp.text))
 
@@ -104,12 +118,12 @@ def main() -> None:
     for screen in SCREENS:
         print(f"\nFetching: {screen['title']}")
         try:
-            df = fetch_screen_csv(session, screen["id"])
+            df = fetch_screen_csv(session, screen["id"], screen["slug"])
             dest = DOWNLOAD_DIR / screen["folder"]
             dest.mkdir(parents=True, exist_ok=True)
             csv_path = dest / f"screener_{date_str}.csv"
             df.to_csv(csv_path, index=False, encoding="utf-8")
-            print(f"  Saved {len(df)} rows → {csv_path}")
+            print(f"  Saved {len(df)} rows -> {csv_path}")
         except Exception as exc:
             print(f"  Failed: {exc}")
         time.sleep(1)

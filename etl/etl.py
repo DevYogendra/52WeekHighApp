@@ -34,8 +34,6 @@ from config import (  # noqa: E402
     LOG_FORMAT,
     ensure_directories_exist,
 )
-import db_utils  # noqa: E402
-
 # ── Logging ───────────────────────────────────────────────────────────────────
 
 log = logging.getLogger("ETL")
@@ -51,7 +49,11 @@ _console_handler = logging.StreamHandler(sys.stdout)
 _console_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=LOG_DATE_FORMAT))
 log.addHandler(_console_handler)
 
-db_utils.register_adapters()
+import datetime as _dt
+sqlite3.register_adapter(_dt.date, lambda d: d.isoformat())
+sqlite3.register_converter("DATE", lambda s: _dt.date.fromisoformat(s.decode("utf-8")))
+del _dt
+
 JOBS = ETL_JOBS
 
 
