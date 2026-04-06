@@ -19,6 +19,11 @@ from db_utils import (
     get_persistence_scores,
 )
 from grid_utils import render_interactive_table
+from mcap_tier_utils import (
+    add_mcap_tier_col,
+    apply_mcap_tier_filter,
+    render_mcap_sidebar_filter,
+)
 from plot_utils import market_cap_line_chart
 
 
@@ -69,6 +74,7 @@ def _render_trend_leaders():
     industries = ["All"] + sorted(df["industry"].dropna().unique().tolist())
     selected_industry = st.sidebar.selectbox("Filter by Industry", industries, key="tl_industry")
     min_hits = st.sidebar.number_input("Min hits (last 30 days)", min_value=0, max_value=30, value=1, step=1, key="tl_min_hits")
+    selected_tiers = render_mcap_sidebar_filter(key="tl_mcap_tier")
 
     df["hits_7"] = df["hits_7"].fillna(0).astype(int)
     df["hits_30"] = df["hits_30"].fillna(0).astype(int)
@@ -79,21 +85,23 @@ def _render_trend_leaders():
     df["Hits 31-60D"] = (df["hits_60"] - df["hits_30"]).clip(lower=0)
     df["Trend Score"] = df["Hits 0-7D"] * 3 + df["Hits 8-30D"] * 2 + df["Hits 31-60D"]
     df["Acceleration"] = ((df["Hits 0-7D"] / 7.0) - (df["Hits 8-30D"] / 23.0)).round(3)
+    df = add_mcap_tier_col(df, col="market_cap", out_col="mcap_tier")
 
     filtered = df[df["hits_7"] > 0]
     if selected_industry != "All":
         filtered = filtered[filtered["industry"] == selected_industry]
     filtered = filtered[filtered["hits_30"] >= min_hits]
+    filtered = apply_mcap_tier_filter(filtered, selected_tiers)
     filtered = filtered.sort_values(["Trend Score", "Acceleration", "%_gain_mc"], ascending=[False, False, False])
 
     st.caption("Trend Score = 3×Hits 0-7D + 2×Hits 8-30D + 1×Hits 31-60D. Acceleration = recent daily hit rate vs prior 23 days.")
 
     render_interactive_table(
         filtered,
-        columns=["name", "industry", "market_cap", "first_market_cap", "%_gain_mc",
+        columns=["name", "industry", "mcap_tier", "market_cap", "first_market_cap", "%_gain_mc",
                  "Hits 0-7D", "Hits 8-30D", "Hits 31-60D", "Trend Score", "Acceleration"],
         key="trend_leaders_main",
-        rename_map={"name": "Company", "industry": "Industry",
+        rename_map={"name": "Company", "industry": "Industry", "mcap_tier": "Tier",
                     "market_cap": "MCap", "first_market_cap": "First MCap", "%_gain_mc": "Gain %"},
         integer_cols=["Hits 0-7D", "Hits 8-30D", "Hits 31-60D", "Trend Score"],
         one_decimal_cols=["%_gain_mc"],
@@ -165,17 +173,22 @@ def _render_new_breakouts():
     recent_days     = st.sidebar.slider("Lookback Window (Days)", 3, 15, 7, key="ew_days")
     min_appearances = st.sidebar.slider("Min Appearances", 1, 5, 2, key="ew_appearances")
     min_gain_pct    = st.sidebar.slider("Min MCap Gain (%)", 0, 50, 5, key="ew_gain")
+    selected_tiers  = render_mcap_sidebar_filter(key="nb_mcap_tier")
 
     df = _fetch_emerging_winners(recent_days, min_appearances, min_gain_pct)
     if df.empty:
         st.info("No emerging winners match the selected filters.")
         return
 
+    df = add_mcap_tier_col(df, col="Market Cap Now", out_col="mcap_tier")
+    df = apply_mcap_tier_filter(df, selected_tiers)
+
     render_interactive_table(
         df,
-        columns=["Company", "Industry", "First Seen", "Appearances",
+        columns=["Company", "Industry", "mcap_tier", "First Seen", "Appearances",
                  "Market Cap Then", "Market Cap Now", "Market Cap Gain (%)"],
         key="new_breakouts_main",
+        rename_map={"mcap_tier": "Tier"},
         integer_cols=["Appearances"],
         one_decimal_cols=["Market Cap Gain (%)"],
         major_cols=["Market Cap Then", "Market Cap Now"],
@@ -196,6 +209,8 @@ def _render_weekly_shift():
         st.warning("No historical market cap data available.")
         return
 
+    selected_tiers = render_mcap_sidebar_filter(key="ws_mcap_tier")
+
     hist_df["date"] = pd.to_datetime(hist_df["date"])
     this_mon, this_sun = _week_range(latest_date)
     last_mon = this_mon - datetime.timedelta(days=7)
@@ -211,6 +226,7 @@ def _render_weekly_shift():
     merged["gain_delta"] = merged["gain_pct_this"].fillna(0) - merged["gain_pct_last"].fillna(0)
     merged["nse_code"]   = merged["nse_code_this"].fillna(merged["nse_code_last"])
     merged["bse_code"]   = merged["bse_code_this"].fillna(merged["bse_code_last"])
+    merged = add_mcap_tier_col(merged, col="market_cap_end_this", out_col="mcap_tier")
 
     rising = merged[(merged["hits_delta"] > 0) & (merged["gain_delta"] > 0)].sort_values(
         ["hits_delta", "gain_delta"], ascending=[False, False]
@@ -218,18 +234,20 @@ def _render_weekly_shift():
     losing = merged[(merged["hits_delta"] < 0) & (merged["gain_delta"] < 0)].sort_values(
         ["hits_delta", "gain_delta"], ascending=[True, True]
     )
+    rising = apply_mcap_tier_filter(rising, selected_tiers)
+    losing = apply_mcap_tier_filter(losing, selected_tiers)
 
     def _render_shift_table(frame, title, key):
         st.markdown(f"### {title} ({len(frame)})")
         render_interactive_table(
             frame,
-            columns=["name", "industry_this", "market_cap_end_this",
+            columns=["name", "industry_this", "mcap_tier", "market_cap_end_this",
                      "hits_last", "hits_this", "gain_pct_last", "gain_pct_this",
                      "hits_delta", "gain_delta"],
             key=key,
             rename_map={
                 "name": "Company", "industry_this": "Industry",
-                "market_cap_end_this": "MCap",
+                "mcap_tier": "Tier", "market_cap_end_this": "MCap",
                 "hits_last": "Hits LW", "hits_this": "Hits TW",
                 "gain_pct_last": "%Gain LW", "gain_pct_this": "%Gain TW",
                 "hits_delta": "Delta Hits", "gain_delta": "Delta Gain",
@@ -256,17 +274,20 @@ def _render_persistence():
     score_cutoff = st.sidebar.number_input("Min persistence score", min_value=0.0,
                                            max_value=float(df["persistence_score"].max()), value=20.0,
                                            step=1.0, key="ps_score")
+    selected_tiers = render_mcap_sidebar_filter(key="ps_mcap_tier")
 
+    df = add_mcap_tier_col(df, col="market_cap", out_col="mcap_tier")
     filtered = df[(df["hits_7"] >= min_hits) & (df["persistence_score"] >= score_cutoff)]
+    filtered = apply_mcap_tier_filter(filtered, selected_tiers)
     if filtered.empty:
         st.info("No candidates match the selected filters.")
         return
 
     render_interactive_table(
         filtered.sort_values("persistence_score", ascending=False),
-        columns=["name", "industry", "market_cap", "hits_7", "hits_30", "hits_60", "%_gain_mc", "persistence_score"],
+        columns=["name", "industry", "mcap_tier", "market_cap", "hits_7", "hits_30", "hits_60", "%_gain_mc", "persistence_score"],
         key="persistence_main",
-        rename_map={"market_cap": "MCap (Cr)", "%_gain_mc": "Gain %", "persistence_score": "Persistence Score"},
+        rename_map={"mcap_tier": "Tier", "market_cap": "MCap (Cr)", "%_gain_mc": "Gain %", "persistence_score": "Persistence Score"},
         integer_cols=["hits_7", "hits_30", "hits_60"],
         one_decimal_cols=["%_gain_mc"],
         two_decimal_cols=["persistence_score"],
@@ -313,25 +334,23 @@ def _render_im_score():
         "Composite = Novelty × 0.4 + Momentum × 0.6"
     )
 
-    tier_filter = st.sidebar.selectbox(
-        "MCap tier filter",
-        ["All", "SMALL", "MID", "LARGE", "MEGA"],
-        key="im_tier",
-    )
+    selected_tiers = render_mcap_sidebar_filter(key="im_mcap_tier")
     min_composite = st.sidebar.slider("Min composite score", 0.0, 14.0, 6.0, step=0.5, key="im_min_score")
 
+    df = add_mcap_tier_col(df, col="market_cap", out_col="mcap_tier")
     filtered = df[df["im_composite"] >= min_composite]
-    if tier_filter != "All" and "market_cap_tier" in filtered.columns:
-        filtered = filtered[filtered["market_cap_tier"] == tier_filter]
+    filtered = apply_mcap_tier_filter(filtered, selected_tiers)
 
     render_interactive_table(
         filtered,
-        columns=["name", "industry", "hits_1y", "days_since_last_high",
+        columns=["name", "industry", "mcap_tier", "market_cap", "hits_1y", "days_since_last_high",
                  "novelty_score", "momentum_score", "im_composite", "%_gain_mc"],
         key="im_score_main",
         rename_map={
             "name": "Company",
             "industry": "Industry",
+            "mcap_tier": "Tier",
+            "market_cap": "MCap (Cr)",
             "hits_1y": "Hits 1Y",
             "days_since_last_high": "Days Since High",
             "novelty_score": "Novelty",
@@ -342,6 +361,7 @@ def _render_im_score():
         integer_cols=["hits_1y", "days_since_last_high", "novelty_score", "momentum_score"],
         two_decimal_cols=["im_composite"],
         one_decimal_cols=["%_gain_mc"],
+        major_cols=["market_cap"],
         link_col="name",
         height=520,
     )

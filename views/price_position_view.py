@@ -15,6 +15,7 @@ from db_utils import (
     get_historical_market_cap,
 )
 from grid_utils import render_interactive_table
+from mcap_tier_utils import add_mcap_tier_col, apply_mcap_tier_filter, render_mcap_sidebar_filter
 from views.bucket_view_utils import (
     BUCKET_MAJOR_COLS,
     BUCKET_ONE_DECIMAL_COLS,
@@ -209,6 +210,11 @@ def main():
     if daily_df.empty:
         st.warning("No data available after processing.")
         return
+
+    # ── sidebar filters ───────────────────────────────────────────────────────
+    selected_tiers = render_mcap_sidebar_filter(key="pp_mcap_tier")
+    daily_df = add_mcap_tier_col(daily_df, col="market_cap_cr", out_col="mcap_tier")
+    daily_df = apply_mcap_tier_filter(daily_df, selected_tiers)
 
     # ── filters ───────────────────────────────────────────────────────────────
     industries = ["All"] + sorted(daily_df["industry"].dropna().unique().tolist())

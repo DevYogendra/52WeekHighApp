@@ -5,6 +5,7 @@ import streamlit as st
 
 from db_utils import compute_industry_tailwind_stats, get_momentum_summary, get_tailwind_stocks
 from grid_utils import render_interactive_table
+from mcap_tier_utils import add_mcap_tier_col, apply_mcap_tier_filter, render_mcap_sidebar_filter
 
 
 def _format_detail_table(df: pd.DataFrame, lookback_days: int) -> pd.DataFrame:
@@ -53,10 +54,17 @@ def main():
     lookback   = st.sidebar.slider("Lookback Window (Days)", 30, 90, 60, key="tw_lookback")
     min_hits   = st.sidebar.slider("Min Appearances per Stock", 1, 20, 5, key="tw_min_hits")
     min_stocks = st.sidebar.slider("Min Qualifying Stocks per Industry", 1, 10, 3, key="tw_min_stocks")
+    selected_tiers = render_mcap_sidebar_filter(key="tw_mcap_tier")
 
     active_df = get_tailwind_stocks(lookback, min_hits)
     if active_df.empty:
         st.info("No stocks match the selected filters.")
+        return
+    active_df = apply_mcap_tier_filter(
+        add_mcap_tier_col(active_df, col="market_cap"), selected_tiers
+    )
+    if active_df.empty:
+        st.info("No stocks match the selected MCap tier filter.")
         return
 
     # Total stocks per industry (all time) — used for breadth %
@@ -90,7 +98,7 @@ def main():
 
     st.caption(
         f"Showing industries with ≥ **{min_stocks}** stocks that appeared ≥ **{min_hits}×** "
-        f"in the last **{lookback}** days."
+        f"in the last **{lookback}** days. MCap tier filter applies to individual stocks before aggregation."
     )
 
     render_interactive_table(

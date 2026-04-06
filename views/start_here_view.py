@@ -18,6 +18,7 @@ from db_utils import (
     get_tailwind_stocks,
 )
 from grid_utils import render_interactive_table
+from mcap_tier_utils import add_mcap_tier_col, apply_mcap_tier_filter, render_mcap_sidebar_filter
 
 
 def _render_table(df: pd.DataFrame, columns: list[str], rename_map: dict[str, str]) -> None:
@@ -182,6 +183,21 @@ def main() -> None:
 
     top_shift_df = _get_trend_shift_snapshot()
     top_persistence_df = persistence_df.head(8) if not persistence_df.empty else pd.DataFrame()
+
+    # MCap tier filter — applies to company-level signal tables
+    selected_tiers = render_mcap_sidebar_filter(key="sh_mcap_tier")
+    if not top_trend_df.empty:
+        top_trend_df = apply_mcap_tier_filter(
+            add_mcap_tier_col(top_trend_df, col="market_cap"), selected_tiers
+        )
+    if not top_shift_df.empty:
+        top_shift_df = apply_mcap_tier_filter(
+            add_mcap_tier_col(top_shift_df, col="market_cap_end_this"), selected_tiers
+        )
+    if not top_persistence_df.empty:
+        top_persistence_df = apply_mcap_tier_filter(
+            add_mcap_tier_col(top_persistence_df, col="market_cap"), selected_tiers
+        )
 
     st.caption(f"Latest highs data date: {latest_highs_date}")
 
