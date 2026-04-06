@@ -49,10 +49,8 @@ _console_handler = logging.StreamHandler(sys.stdout)
 _console_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=LOG_DATE_FORMAT))
 log.addHandler(_console_handler)
 
-import datetime as _dt
-sqlite3.register_adapter(_dt.date, lambda d: d.isoformat())
-sqlite3.register_converter("DATE", lambda s: _dt.date.fromisoformat(s.decode("utf-8")))
-del _dt
+sqlite3.register_adapter(datetime.date, lambda d: d.isoformat())
+sqlite3.register_converter("DATE", lambda s: datetime.date.fromisoformat(s.decode("utf-8")))
 
 JOBS = ETL_JOBS
 
