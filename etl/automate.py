@@ -63,7 +63,8 @@ def _load_local_config() -> configparser.ConfigParser:
 
 
 _cfg = _load_local_config()
-PYTHON_CMD  = _cfg.get("automation", "python_cmd",   fallback=sys.executable)
+_python_exe = _cfg.get("automation", "python_cmd",   fallback=sys.executable)
+PYTHON_CMD  = f'"{_python_exe}"' if " " in _python_exe else _python_exe
 REPO_BRANCH = _cfg.get("automation", "repo_branch",  fallback="").strip()
 
 
