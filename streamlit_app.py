@@ -9,6 +9,7 @@ PAGE_OPTIONS = {
     "Momentum Rankings": "momentum_view",
     "Price Position": "price_position_view",
     "Industry Tailwinds": "industry_tailwinds_view",
+    "Valuation Calculator": "valuation_calculator_view",
 }
 
 st.sidebar.title("52-Week High Tracker")

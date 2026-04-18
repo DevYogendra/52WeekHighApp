@@ -9,10 +9,10 @@ from mcap_tier_utils import add_mcap_tier_col, apply_mcap_tier_filter, render_mc
 
 
 def _format_detail_table(df: pd.DataFrame, lookback_days: int) -> pd.DataFrame:
-    hits_col = f"Hits {lookback_days}D"
+    # "Hits (Window)" is always unique — avoids collision when lookback_days == 30 or 60
     cols = {
         "name": "Stock",
-        "hits_in_window": hits_col,
+        "hits_in_window": "Hits (Window)",
         "hits_30": "Hits 30D",
         "hits_60": "Hits 60D",
         "%_gain_mc": "Gain %",
@@ -22,7 +22,7 @@ def _format_detail_table(df: pd.DataFrame, lookback_days: int) -> pd.DataFrame:
     available = [c for c in cols if c in df.columns]
     detail_df = df[available].copy().rename(columns=cols)
 
-    for col in [hits_col, "Hits 30D", "Hits 60D"]:
+    for col in ["Hits (Window)", "Hits 30D", "Hits 60D"]:
         if col in detail_df.columns:
             detail_df[col] = pd.to_numeric(detail_df[col], errors="coerce").astype("Int64")
     if "Gain %" in detail_df.columns:

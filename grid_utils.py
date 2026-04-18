@@ -34,6 +34,12 @@ def _build_screener_url(row: pd.Series) -> str | None:
     bse = str(row.get("bse_code", "")).strip()
     nse = "" if nse.lower() in _NA_VALUES else nse
     bse = "" if bse.lower() in _NA_VALUES else bse
+    # BSE codes arrive as floats (e.g. "543920.0") — strip the decimal
+    if bse and "." in bse:
+        try:
+            bse = str(int(float(bse)))
+        except (ValueError, OverflowError):
+            bse = ""
     code = nse or bse
     return f"https://www.screener.in/company/{code}/" if code else None
 
