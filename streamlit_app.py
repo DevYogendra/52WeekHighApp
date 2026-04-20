@@ -10,6 +10,7 @@ PAGE_OPTIONS = {
     "Price Position": "price_position_view",
     "Industry Tailwinds": "industry_tailwinds_view",
     "Valuation Calculator": "valuation_calculator_view",
+    "Bank & NBFC Valuation": "bank_nbfc_valuation_view",
 }
 
 st.sidebar.title("52-Week High Tracker")

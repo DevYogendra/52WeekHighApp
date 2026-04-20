@@ -405,7 +405,7 @@ def main():
         sens = _sensitivity_df(coe, g, [3, 5, 7, 10, 12, 15],
                                [0.12, 0.14, 0.16, 0.18, 0.20, 0.22, 0.25, 0.28, 0.30],
                                roce_t_pct, g_t)
-        st.dataframe(sens.style.applymap(_color_pe), use_container_width=True)
+        st.dataframe(sens.style.map(_color_pe), use_container_width=True)
         st.caption("Green < 20x · Yellow 20–35x · Orange 35–55x · Red > 55x")
 
         # ── Reverse DCF ───────────────────────────────────────────────────────
