@@ -17,12 +17,13 @@ from db_utils import (
     get_latest_table_date,
     get_momentum_summary,
     get_persistence_scores,
+    get_weekly_report_snapshot,
 )
 from grid_utils import render_interactive_table
 from mcap_tier_utils import (
     add_mcap_tier_col,
     apply_mcap_tier_filter,
-    render_mcap_sidebar_filter,
+    get_global_mcap_focus,
 )
 from plot_utils import market_cap_line_chart
 
@@ -74,7 +75,7 @@ def _render_trend_leaders():
     industries = ["All"] + sorted(df["industry"].dropna().unique().tolist())
     selected_industry = st.sidebar.selectbox("Filter by Industry", industries, key="tl_industry")
     min_hits = st.sidebar.number_input("Min hits (last 30 days)", min_value=0, max_value=30, value=1, step=1, key="tl_min_hits")
-    selected_tiers = render_mcap_sidebar_filter(key="tl_mcap_tier")
+    selected_tiers = get_global_mcap_focus()
 
     df["hits_7"] = df["hits_7"].fillna(0).astype(int)
     df["hits_30"] = df["hits_30"].fillna(0).astype(int)
@@ -173,7 +174,7 @@ def _render_new_breakouts():
     recent_days     = st.sidebar.slider("Lookback Window (Days)", 3, 15, 7, key="ew_days")
     min_appearances = st.sidebar.slider("Min Appearances", 1, 5, 2, key="ew_appearances")
     min_gain_pct    = st.sidebar.slider("Min MCap Gain (%)", 0, 50, 5, key="ew_gain")
-    selected_tiers  = render_mcap_sidebar_filter(key="nb_mcap_tier")
+    selected_tiers  = get_global_mcap_focus()
 
     df = _fetch_emerging_winners(recent_days, min_appearances, min_gain_pct)
     if df.empty:
@@ -199,62 +200,61 @@ def _render_new_breakouts():
 
 
 def _render_weekly_shift():
-    latest_date = _latest_date()
-    if latest_date is None:
-        st.warning("No dated highs data available.")
+    snapshot = get_weekly_report_snapshot()
+    if not snapshot:
+        st.warning("Not enough weekly data is available yet.")
         return
 
-    hist_df = get_historical_market_cap()
-    if hist_df.empty:
-        st.warning("No historical market cap data available.")
+    comparison = snapshot.get("comparison", pd.DataFrame())
+    if comparison.empty:
+        st.warning("No weekly comparison data is available.")
         return
 
-    selected_tiers = render_mcap_sidebar_filter(key="ws_mcap_tier")
+    meta = snapshot["meta"]
+    selected_tiers = get_global_mcap_focus()
+    comparison = add_mcap_tier_col(comparison, col="market_cap", out_col="mcap_tier")
+    comparison = apply_mcap_tier_filter(comparison, selected_tiers)
 
-    hist_df["date"] = pd.to_datetime(hist_df["date"])
-    this_mon, this_sun = _week_range(latest_date)
-    last_mon = this_mon - datetime.timedelta(days=7)
-    last_sun = this_sun - datetime.timedelta(days=7)
+    report_period = (
+        f"{meta['report_week_start']} to {meta['report_week_last_data_date']} "
+        f"({meta['report_trading_days']} trading days)"
+    )
+    compare_period = (
+        f"{meta['compare_week_start']} to {meta['compare_week_last_data_date']} "
+        f"({meta['compare_trading_days']} trading days)"
+    )
+    st.caption(f"Report week: {report_period} | Prior week: {compare_period}")
 
-    st.caption(f"Latest data: {latest_date} | This week: {this_mon} – {this_sun} | Last week: {last_mon} – {last_sun}")
+    if meta.get("skipped_partial_week"):
+        st.info(
+            f"Skipped the partial week starting {meta['skipped_week_start']} so the comparison reflects completed weeks."
+        )
 
-    this_week = _weekly_summary(hist_df, this_mon, this_sun)
-    last_week = _weekly_summary(hist_df, last_mon, last_sun)
-
-    merged = pd.merge(this_week, last_week, on="name", how="outer", suffixes=("_this", "_last"))
-    merged["hits_delta"] = merged["hits_this"].fillna(0) - merged["hits_last"].fillna(0)
-    merged["gain_delta"] = merged["gain_pct_this"].fillna(0) - merged["gain_pct_last"].fillna(0)
-    merged["nse_code"]   = merged["nse_code_this"].fillna(merged["nse_code_last"])
-    merged["bse_code"]   = merged["bse_code_this"].fillna(merged["bse_code_last"])
-    merged = add_mcap_tier_col(merged, col="market_cap_end_this", out_col="mcap_tier")
-
-    rising = merged[(merged["hits_delta"] > 0) & (merged["gain_delta"] > 0)].sort_values(
+    rising = comparison[comparison["status"] == "Rising"].sort_values(
         ["hits_delta", "gain_delta"], ascending=[False, False]
     )
-    losing = merged[(merged["hits_delta"] < 0) & (merged["gain_delta"] < 0)].sort_values(
+    losing = comparison[comparison["status"] == "Falling"].sort_values(
         ["hits_delta", "gain_delta"], ascending=[True, True]
     )
-    rising = apply_mcap_tier_filter(rising, selected_tiers)
-    losing = apply_mcap_tier_filter(losing, selected_tiers)
 
     def _render_shift_table(frame, title, key):
         st.markdown(f"### {title} ({len(frame)})")
         render_interactive_table(
             frame,
-            columns=["name", "industry_this", "mcap_tier", "market_cap_end_this",
+            columns=["name", "industry", "mcap_tier", "market_cap",
                      "hits_last", "hits_this", "gain_pct_last", "gain_pct_this",
                      "hits_delta", "gain_delta"],
             key=key,
             rename_map={
-                "name": "Company", "industry_this": "Industry",
-                "mcap_tier": "Tier", "market_cap_end_this": "MCap",
+                "name": "Company", "industry": "Industry",
+                "mcap_tier": "Tier", "market_cap": "MCap",
                 "hits_last": "Hits LW", "hits_this": "Hits TW",
                 "gain_pct_last": "%Gain LW", "gain_pct_this": "%Gain TW",
                 "hits_delta": "Delta Hits", "gain_delta": "Delta Gain",
             },
             integer_cols=["hits_last", "hits_this", "hits_delta"],
             one_decimal_cols=["gain_pct_last", "gain_pct_this", "gain_delta"],
-            major_cols=["market_cap_end_this"],
+            major_cols=["market_cap"],
             link_col="name",
             height=320,
         )
@@ -274,7 +274,7 @@ def _render_persistence():
     score_cutoff = st.sidebar.number_input("Min persistence score", min_value=0.0,
                                            max_value=float(df["persistence_score"].max()), value=20.0,
                                            step=1.0, key="ps_score")
-    selected_tiers = render_mcap_sidebar_filter(key="ps_mcap_tier")
+    selected_tiers = get_global_mcap_focus()
 
     df = add_mcap_tier_col(df, col="market_cap", out_col="mcap_tier")
     filtered = df[(df["hits_7"] >= min_hits) & (df["persistence_score"] >= score_cutoff)]
@@ -334,7 +334,7 @@ def _render_im_score():
         "Composite = Novelty × 0.4 + Momentum × 0.6"
     )
 
-    selected_tiers = render_mcap_sidebar_filter(key="im_mcap_tier")
+    selected_tiers = get_global_mcap_focus()
     min_composite = st.sidebar.slider("Min composite score", 0.0, 14.0, 6.0, step=0.5, key="im_min_score")
 
     df = add_mcap_tier_col(df, col="market_cap", out_col="mcap_tier")
@@ -392,6 +392,7 @@ Fresh breakout bonus (≤3 days since last high): +2 pts
 def main():
     st.title("Momentum Rankings")
     st.markdown("Five lenses on the same question: which stocks have momentum right now?")
+    st.caption("The app-wide MCap Focus in the sidebar applies across all momentum tabs.")
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs(
         ["Trend Leaders", "New Breakouts", "Weekly Shift", "Persistence", "IM Score"]

@@ -5,7 +5,7 @@ import streamlit as st
 
 from db_utils import compute_industry_tailwind_stats, get_momentum_summary, get_tailwind_stocks
 from grid_utils import render_interactive_table
-from mcap_tier_utils import add_mcap_tier_col, apply_mcap_tier_filter, render_mcap_sidebar_filter
+from mcap_tier_utils import add_mcap_tier_col, apply_mcap_tier_filter, get_global_mcap_focus
 
 
 def _format_detail_table(df: pd.DataFrame, lookback_days: int) -> pd.DataFrame:
@@ -49,12 +49,13 @@ def main():
         "on the 52-week high list over a multi-week window."
     )
     st.caption("Gain is market-cap weighted so a tiny outlier does not distort the industry trend.")
+    st.caption("The app-wide MCap Focus in the sidebar filters stocks before industry aggregation.")
 
     st.sidebar.subheader("Filters")
     lookback   = st.sidebar.slider("Lookback Window (Days)", 30, 90, 60, key="tw_lookback")
     min_hits   = st.sidebar.slider("Min Appearances per Stock", 1, 20, 5, key="tw_min_hits")
     min_stocks = st.sidebar.slider("Min Qualifying Stocks per Industry", 1, 10, 3, key="tw_min_stocks")
-    selected_tiers = render_mcap_sidebar_filter(key="tw_mcap_tier")
+    selected_tiers = get_global_mcap_focus()
 
     active_df = get_tailwind_stocks(lookback, min_hits)
     if active_df.empty:

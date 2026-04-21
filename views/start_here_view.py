@@ -1,5 +1,3 @@
-import datetime
-
 import pandas as pd
 import streamlit as st
 
@@ -11,14 +9,14 @@ from db_utils import (
     get_downfromhigh_dates,
     get_fivetofiftyclub_data_for_date,
     get_fivetofiftyclub_dates,
-    get_historical_market_cap,
     get_latest_table_date,
     get_momentum_summary,
     get_persistence_scores,
     get_tailwind_stocks,
+    get_weekly_report_snapshot,
 )
 from grid_utils import render_interactive_table
-from mcap_tier_utils import add_mcap_tier_col, apply_mcap_tier_filter, render_mcap_sidebar_filter
+from mcap_tier_utils import add_mcap_tier_col, apply_mcap_tier_filter, get_global_mcap_focus
 
 
 def _render_table(df: pd.DataFrame, columns: list[str], rename_map: dict[str, str]) -> None:
@@ -48,78 +46,27 @@ def _render_table(df: pd.DataFrame, columns: list[str], rename_map: dict[str, st
         fit_columns=True,
     )
 
-
-def _get_week_range(date: datetime.date) -> tuple[datetime.date, datetime.date]:
-    weekday = date.weekday()
-    monday = date - datetime.timedelta(days=weekday)
-    sunday = monday + datetime.timedelta(days=6)
-    return monday, sunday
-
-
-def _compute_weekly_summary(df: pd.DataFrame, start_date: datetime.date, end_date: datetime.date) -> pd.DataFrame:
-    mask = (df["date"] >= pd.to_datetime(start_date)) & (df["date"] <= pd.to_datetime(end_date))
-    week_df = df.loc[mask].copy()
-    if week_df.empty:
-        return pd.DataFrame()
-
-    summary = week_df.groupby("name").agg(
-        hits=("date", "count"),
-        market_cap_start=("market_cap", "first"),
-        market_cap_end=("market_cap", "last"),
-        industry=("industry", "first"),
-        nse_code=("nse_code", "first"),
-        bse_code=("bse_code", "first"),
-    ).reset_index()
-    summary["gain_pct"] = (
-        100 * (summary["market_cap_end"] - summary["market_cap_start"])
-        / summary["market_cap_start"].replace(0, pd.NA)
-    )
-    return summary
-
-
 def _get_trend_shift_snapshot(limit: int = 8) -> pd.DataFrame:
-    latest_data_date = get_latest_table_date(TABLE_HIGHS)
-    if latest_data_date is None:
+    snapshot = get_weekly_report_snapshot()
+    if not snapshot:
         return pd.DataFrame()
 
-    hist_df = get_historical_market_cap()
-    if hist_df.empty:
+    comparison = snapshot.get("comparison", pd.DataFrame())
+    if comparison.empty:
         return pd.DataFrame()
 
-    hist_df["date"] = pd.to_datetime(hist_df["date"])
-    this_mon, this_sun = _get_week_range(latest_data_date)
-    last_mon = this_mon - datetime.timedelta(days=7)
-    last_sun = this_sun - datetime.timedelta(days=7)
-
-    this_week = _compute_weekly_summary(hist_df, this_mon, this_sun)
-    last_week = _compute_weekly_summary(hist_df, last_mon, last_sun)
-    if this_week.empty:
-        return pd.DataFrame()
-
-    merged = pd.merge(
-        this_week,
-        last_week,
-        on="name",
-        how="outer",
-        suffixes=("_this", "_last"),
-    )
-    merged["hits_delta"] = merged["hits_this"].fillna(0) - merged["hits_last"].fillna(0)
-    merged["gain_delta"] = merged["gain_pct_this"].fillna(0) - merged["gain_pct_last"].fillna(0)
-    merged["nse_code"] = merged["nse_code_this"]
-    merged["bse_code"] = merged["bse_code_this"]
-
-    rising = merged[(merged["hits_delta"] > 0) & (merged["gain_delta"] > 0)].copy()
+    rising = comparison[comparison["status"] == "Rising"].copy()
     rising = rising.sort_values(["hits_delta", "gain_delta"], ascending=[False, False]).head(limit)
     if rising.empty:
         return rising
 
-    rising = rising.rename(columns={"industry_this": "industry"})
     return rising
 
 
 def main() -> None:
     st.title("Start Here")
     st.markdown("A quick investor dashboard for where to look first and why.")
+    st.caption("The app-wide MCap Focus in the sidebar shapes the company-level signal tables on this page.")
 
     latest_highs_date = get_latest_table_date(TABLE_HIGHS)
     if latest_highs_date is None:
@@ -185,14 +132,14 @@ def main() -> None:
     top_persistence_df = persistence_df.head(8) if not persistence_df.empty else pd.DataFrame()
 
     # MCap tier filter — applies to company-level signal tables
-    selected_tiers = render_mcap_sidebar_filter(key="sh_mcap_tier")
+    selected_tiers = get_global_mcap_focus()
     if not top_trend_df.empty:
         top_trend_df = apply_mcap_tier_filter(
             add_mcap_tier_col(top_trend_df, col="market_cap"), selected_tiers
         )
     if not top_shift_df.empty:
         top_shift_df = apply_mcap_tier_filter(
-            add_mcap_tier_col(top_shift_df, col="market_cap_end_this"), selected_tiers
+            add_mcap_tier_col(top_shift_df, col="market_cap"), selected_tiers
         )
     if not top_persistence_df.empty:
         top_persistence_df = apply_mcap_tier_filter(
@@ -211,10 +158,11 @@ def main() -> None:
     st.subheader("Suggested investor flow")
     st.markdown(
         """
-        1. Go to **Momentum Rankings → Trend Leaders** to see the strongest persistent names.
-        2. Check **Momentum Rankings → Weekly Shift** to catch acceleration or weakening momentum.
-        3. Use **Industry Tailwinds** to confirm whether the sector is helping the stock.
-        4. Use **Price Position** when you want to screen names by distance from their 52W high.
+        1. Start with **Weekly Report** for the shortest read on breadth, fresh names, sector leadership, and risk.
+        2. Go to **Momentum Rankings -> Trend Leaders** to see the strongest persistent names.
+        3. Check **Momentum Rankings -> Weekly Shift** to catch acceleration or weakening momentum.
+        4. Use **Industry Tailwinds** to confirm whether the sector is helping the stock.
+        5. Use **Price Position** when you want to screen names by distance from their 52W high.
         """
     )
 

@@ -1,6 +1,7 @@
 import importlib
 
 import streamlit as st
+from mcap_tier_utils import render_global_mcap_focus_sidebar
 
 st.set_page_config(page_title="52-Week High Tracker", layout="wide")
 
@@ -11,6 +12,15 @@ PAGE_OPTIONS = {
     "Industry Tailwinds": "industry_tailwinds_view",
     "Valuation Calculator": "valuation_calculator_view",
     "Bank & NBFC Valuation": "bank_nbfc_valuation_view",
+    "Weekly Report": "weekly_report_view",
+}
+
+GLOBAL_MCAP_FOCUS_PAGES = {
+    "Start Here",
+    "Momentum Rankings",
+    "Price Position",
+    "Industry Tailwinds",
+    "Weekly Report",
 }
 
 st.sidebar.title("52-Week High Tracker")
@@ -20,6 +30,11 @@ page_selection = st.sidebar.radio(
     key="page_radio",
     label_visibility="collapsed",
 )
+
+if page_selection in GLOBAL_MCAP_FOCUS_PAGES:
+    st.sidebar.markdown("---")
+    render_global_mcap_focus_sidebar()
+    st.sidebar.caption("Shared across Start Here, Momentum, Price Position, Industry Tailwinds, and Weekly Report.")
 
 try:
     module = importlib.import_module(f"views.{PAGE_OPTIONS[page_selection]}")

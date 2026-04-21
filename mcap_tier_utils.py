@@ -14,6 +14,8 @@ MCAP_TIERS: list[tuple[str, float, float]] = [
     ("🔵 Mega", 1_00_000, float("inf")),
 ]
 TIER_LABELS: list[str] = [t[0] for t in MCAP_TIERS]
+FOCUS_TIER_LABELS: list[str] = list(reversed(TIER_LABELS))
+GLOBAL_MCAP_FOCUS_KEY = "global_mcap_focus"
 
 
 def get_mcap_tier(value) -> str:
@@ -59,6 +61,24 @@ def render_mcap_sidebar_filter(key: str) -> list[str]:
         default=TIER_LABELS,
         key=key,
     )
+
+
+def render_global_mcap_focus_sidebar() -> list[str]:
+    """Render the shared app-wide market-cap focus control."""
+    return st.sidebar.multiselect(
+        "MCap Focus",
+        options=FOCUS_TIER_LABELS,
+        default=FOCUS_TIER_LABELS,
+        key=GLOBAL_MCAP_FOCUS_KEY,
+        help="Applies across the research views until you change it.",
+    )
+
+
+def get_global_mcap_focus() -> list[str]:
+    """Return the current app-wide MCap focus selection."""
+    if GLOBAL_MCAP_FOCUS_KEY not in st.session_state:
+        return FOCUS_TIER_LABELS.copy()
+    return list(st.session_state[GLOBAL_MCAP_FOCUS_KEY])
 
 
 def apply_mcap_tier_filter(

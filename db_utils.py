@@ -363,6 +363,209 @@ def get_historical_market_cap() -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def _build_weekly_company_snapshot(
+    hist_df: pd.DataFrame,
+    week_start: pd.Timestamp,
+) -> pd.DataFrame:
+    """Summarize one calendar week of highs data at the company level."""
+    week_df = hist_df[hist_df["week_start"] == week_start].copy()
+    if week_df.empty:
+        return pd.DataFrame()
+
+    week_df = week_df.sort_values(["name", "date"])
+    summary = (
+        week_df.groupby("name", dropna=False)
+        .agg(
+            hits=("date", "nunique"),
+            first_seen_in_week=("date", "min"),
+            last_seen_in_week=("date", "max"),
+            market_cap_start=("market_cap", "first"),
+            market_cap_end=("market_cap", "last"),
+            industry=("industry", "last"),
+            nse_code=("nse_code", "last"),
+            bse_code=("bse_code", "last"),
+        )
+        .reset_index()
+    )
+    summary["gain_pct"] = (
+        100 * (summary["market_cap_end"] - summary["market_cap_start"])
+        / summary["market_cap_start"].replace(0, pd.NA)
+    )
+    summary["week_start"] = pd.to_datetime(week_start)
+    return _apply_standard_types(summary)
+
+
+def _build_weekly_industry_snapshot(weekly_df: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate one weekly company snapshot into industry-level stats."""
+    if weekly_df.empty:
+        return pd.DataFrame()
+
+    working = weekly_df.rename(
+        columns={
+            "hits": "hits_in_window",
+            "gain_pct": "%_gain_mc",
+            "market_cap_end": "market_cap",
+        }
+    )
+    return compute_industry_tailwind_stats(working, hits_col="hits_in_window")
+
+
+@st.cache_data(ttl=CACHE_TTL)
+def get_weekly_report_snapshot() -> dict[str, object]:
+    """Return a concise, completed-week comparison for weekly reporting.
+
+    The report intentionally skips an incomplete current week when the latest
+    highs data is from Monday-Thursday. That keeps the report focused on the
+    last finished trading week rather than noisy partial data.
+    """
+    hist_df = get_historical_market_cap()
+    if hist_df.empty or "date" not in hist_df.columns:
+        return {}
+
+    working = hist_df.copy()
+    working["date"] = pd.to_datetime(working["date"], errors="coerce").dt.normalize()
+    working = working.dropna(subset=["date", "name"])
+    if working.empty:
+        return {}
+
+    working["week_start"] = working["date"].dt.to_period("W").dt.start_time
+    week_dates = (
+        working[["date", "week_start"]]
+        .drop_duplicates()
+        .sort_values("date")
+    )
+    if week_dates.empty:
+        return {}
+
+    weeks = (
+        week_dates.groupby("week_start", as_index=False)
+        .agg(
+            first_date=("date", "min"),
+            last_date=("date", "max"),
+            trading_days=("date", "nunique"),
+        )
+        .sort_values("week_start")
+        .reset_index(drop=True)
+    )
+
+    latest_date = pd.to_datetime(week_dates["date"].max())
+    latest_week_partial = latest_date.weekday() < 4
+    report_idx = len(weeks) - 2 if latest_week_partial else len(weeks) - 1
+    compare_idx = report_idx - 1
+    if compare_idx < 0:
+        return {}
+
+    report_week = weeks.iloc[report_idx]
+    compare_week = weeks.iloc[compare_idx]
+
+    this_week = _build_weekly_company_snapshot(working, report_week["week_start"])
+    last_week = _build_weekly_company_snapshot(working, compare_week["week_start"])
+    if this_week.empty or last_week.empty:
+        return {}
+
+    merged = pd.merge(
+        this_week,
+        last_week,
+        on="name",
+        how="outer",
+        suffixes=("_this", "_last"),
+    )
+
+    for col in ["industry", "nse_code", "bse_code"]:
+        merged[col] = merged[f"{col}_this"].combine_first(merged[f"{col}_last"])
+
+    numeric_cols = [
+        "hits_this",
+        "hits_last",
+        "gain_pct_this",
+        "gain_pct_last",
+        "market_cap_end_this",
+        "market_cap_end_last",
+        "market_cap_start_this",
+        "market_cap_start_last",
+    ]
+    for col in numeric_cols:
+        if col in merged.columns:
+            merged[col] = pd.to_numeric(merged[col], errors="coerce")
+
+    merged["hits_delta"] = merged["hits_this"].fillna(0) - merged["hits_last"].fillna(0)
+    merged["gain_delta"] = merged["gain_pct_this"].fillna(0) - merged["gain_pct_last"].fillna(0)
+    merged["market_cap"] = merged["market_cap_end_this"].combine_first(merged["market_cap_end_last"])
+
+    def _status(row: pd.Series) -> str:
+        in_this = pd.notna(row.get("hits_this"))
+        in_last = pd.notna(row.get("hits_last"))
+        if in_this and not in_last:
+            return "New"
+        if in_last and not in_this:
+            return "Dropped"
+        if row.get("hits_delta", 0) > 0 and row.get("gain_delta", 0) >= 0:
+            return "Rising"
+        if row.get("hits_delta", 0) < 0 and row.get("gain_delta", 0) <= 0:
+            return "Falling"
+        return "Stable"
+
+    merged["status"] = merged.apply(_status, axis=1)
+    comparison = _apply_standard_types(merged.reset_index(drop=True))
+
+    industry_this = _build_weekly_industry_snapshot(this_week)
+    industry_last = _build_weekly_industry_snapshot(last_week)
+    industry_comparison = pd.merge(
+        industry_this,
+        industry_last,
+        on="industry",
+        how="outer",
+        suffixes=("_this", "_last"),
+    )
+    if not industry_comparison.empty:
+        for col in [
+            "count_stocks_this",
+            "count_stocks_last",
+            "total_hits_this",
+            "total_hits_last",
+            "avg_hits_this",
+            "avg_hits_last",
+            "weighted_gain_mc_this",
+            "weighted_gain_mc_last",
+        ]:
+            if col in industry_comparison.columns:
+                industry_comparison[col] = pd.to_numeric(industry_comparison[col], errors="coerce")
+        industry_comparison["stocks_delta"] = (
+            industry_comparison["count_stocks_this"].fillna(0)
+            - industry_comparison["count_stocks_last"].fillna(0)
+        )
+        industry_comparison["weighted_gain_delta"] = (
+            industry_comparison["weighted_gain_mc_this"].fillna(0)
+            - industry_comparison["weighted_gain_mc_last"].fillna(0)
+        )
+        industry_comparison = industry_comparison.sort_values(
+            ["count_stocks_this", "weighted_gain_mc_this"],
+            ascending=[False, False],
+        ).reset_index(drop=True)
+
+    skipped_week = weeks.iloc[-1] if latest_week_partial else None
+
+    return {
+        "meta": {
+            "latest_data_date": latest_date.date(),
+            "skipped_partial_week": bool(latest_week_partial),
+            "skipped_week_start": skipped_week["week_start"].date() if skipped_week is not None else None,
+            "skipped_week_last_data_date": skipped_week["last_date"].date() if skipped_week is not None else None,
+            "skipped_week_trading_days": int(skipped_week["trading_days"]) if skipped_week is not None else 0,
+            "report_week_start": report_week["week_start"].date(),
+            "report_week_last_data_date": report_week["last_date"].date(),
+            "report_trading_days": int(report_week["trading_days"]),
+            "compare_week_start": compare_week["week_start"].date(),
+            "compare_week_last_data_date": compare_week["last_date"].date(),
+            "compare_trading_days": int(compare_week["trading_days"]),
+        },
+        "this_week": this_week.reset_index(drop=True),
+        "last_week": last_week.reset_index(drop=True),
+        "comparison": comparison,
+        "industry_comparison": industry_comparison,
+    }
+
+
 @st.cache_data(ttl=CACHE_TTL)
 def get_all_dates() -> list[datetime.date]:
     """Fetch all distinct dates with caching (TTL from config)."""
